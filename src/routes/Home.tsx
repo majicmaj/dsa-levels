@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { lessonsIndex } from "@/content/loadLessons";
+import { lessonsIndex, type LessonCheck } from "@/content/loadLessons";
 import { compareLessons } from "@/lib/utils";
 import { Rocket, BookOpen, ListChecks, ChevronRight, Play } from "lucide-react";
 
@@ -27,6 +27,11 @@ function Home() {
     totalTopics,
     totalLevels,
     recommended,
+    quizCompletedCount,
+    quizTotalCount,
+    quizAverageScore,
+    perTopic,
+    totalDone,
   } = useMemo(() => {
     // Topic + level counts
     const topicCounts = new Map<string, number>();
@@ -72,6 +77,58 @@ function Home() {
       .slice(0, 3)
       .map((l) => l);
 
+    // Quizzes: compute total, completed, average score
+    let quizTotalCount = 0;
+    let quizCompletedCount = 0;
+    let scoreSum = 0;
+    if (typeof window !== "undefined") {
+      for (const l of lessonsIndex) {
+        const checks: LessonCheck[] | undefined = l.meta.checks;
+        const quizCheck = checks?.find((c) => c.type === "quiz") as
+          | { type: "quiz"; id?: string }
+          | undefined;
+        if (!quizCheck) continue;
+        quizTotalCount++;
+        const qid = quizCheck.id || l.meta.id;
+        const submitted = localStorage.getItem(`quiz.submitted.${qid}`) === "1";
+        if (submitted) {
+          quizCompletedCount++;
+          const sc = Number(localStorage.getItem(`quiz.score.${qid}`) || "0");
+          if (!Number.isNaN(sc)) scoreSum += sc;
+        }
+      }
+    }
+    const quizAverageScore = quizCompletedCount
+      ? Math.round(scoreSum / quizCompletedCount)
+      : 0;
+
+    // Per-topic progress and current level
+    const perTopic = topicsAlpha.map(([topic, total]) => {
+      const topicLessons = lessonsIndex.filter((l) => l.meta.topic === topic);
+      const done = topicLessons.filter((l) => completed.has(l.meta.id)).length;
+      const levels = new Map<number, { done: number; total: number }>();
+      for (const l of topicLessons) {
+        const bucket = levels.get(l.meta.level) || { done: 0, total: 0 };
+        bucket.total += 1;
+        if (completed.has(l.meta.id)) bucket.done += 1;
+        levels.set(l.meta.level, bucket);
+      }
+      // current level = smallest level with incomplete lessons, else max+1
+      const sortedLvls = Array.from(levels.keys()).sort((a, b) => a - b);
+      let currentLevel = sortedLvls[0] ?? 1;
+      for (const lv of sortedLvls) {
+        const b = levels.get(lv)!;
+        if (b.done < b.total) {
+          currentLevel = lv;
+          break;
+        }
+        currentLevel = lv + 1;
+      }
+      return { topic, total, done, levels, currentLevel };
+    });
+
+    const totalDone = completed.size;
+
     return {
       topicsAlpha,
       levelsAsc,
@@ -83,6 +140,11 @@ function Home() {
       totalTopics: topicsAlpha.length,
       totalLevels: levelsAsc.length,
       recommended,
+      quizCompletedCount,
+      quizTotalCount,
+      quizAverageScore,
+      perTopic,
+      totalDone,
     };
   }, []);
 
@@ -147,6 +209,60 @@ function Home() {
             value={completedCount}
             icon={<ListChecks className="h-4 w-4" />}
           />
+        </div>
+      </section>
+
+      {/* Progress */}
+      <section>
+        <h2 className="font-display text-xl mb-3">Your Progress</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>Lessons</span>
+              <span className="text-zinc-500">
+                {totalDone}/{totalLessons}
+              </span>
+            </div>
+            <ProgressBar
+              done={totalDone}
+              total={totalLessons}
+              className="mt-2"
+            />
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>Quizzes Completed</span>
+              <span className="text-zinc-500">
+                {quizCompletedCount}/{quizTotalCount}
+              </span>
+            </div>
+            <ProgressBar
+              done={quizCompletedCount}
+              total={quizTotalCount || 1}
+              className="mt-2"
+            />
+            <div className="mt-2 text-xs text-zinc-600">
+              Avg score: {quizAverageScore}%
+            </div>
+          </div>
+          <div className="rounded-xl border bg-card p-4">
+            <div className="text-sm">By Topic</div>
+            <ul className="mt-2 space-y-2">
+              {perTopic.map((p) => (
+                <li key={p.topic} className="flex items-center gap-3">
+                  <div className="w-28 shrink-0 text-sm">
+                    {capitalize(p.topic)}
+                  </div>
+                  <div className="flex-1">
+                    <ProgressBar done={p.done} total={p.total} />
+                  </div>
+                  <div className="w-20 text-right text-xs text-zinc-500">
+                    L{p.currentLevel}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -265,6 +381,38 @@ function StatTile({
         <div className="text-xs text-zinc-500">{label}</div>
         <div className="text-lg font-semibold">{value}</div>
       </div>
+    </div>
+  );
+}
+
+function ProgressBar({
+  done,
+  total,
+  className,
+}: {
+  done: number;
+  total: number;
+  className?: string;
+}) {
+  const pct = Math.max(
+    0,
+    Math.min(100, Math.round((done / (total || 1)) * 100))
+  );
+  return (
+    <div
+      className={
+        "h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800 " +
+        (className || "")
+      }
+    >
+      <div
+        className="h-full bg-primary"
+        style={{ width: `${pct}%` }}
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        role="progressbar"
+      />
     </div>
   );
 }
