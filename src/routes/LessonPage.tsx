@@ -98,7 +98,7 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-8">
+    <div className="mx-auto max-w-6xl px-6 py-8">
       {/* breadcrumbs */}
       <nav className="mb-6 text-sm text-zinc-600">
         <Link to="/" className="underline">
@@ -157,41 +157,45 @@ export default function LessonPage() {
         </div>
       )}
 
-      {/* the lesson */}
-      <LessonView
-        lesson={lesson}
-        markdown={markdownWithoutQuiz || lesson.body}
-      />
+      <div className="lesson-grid grid gap-8 lg:grid-cols-1">
+        <div>
+          {/* the lesson */}
+          <LessonView
+            lesson={lesson}
+            markdown={markdownWithoutQuiz || lesson.body}
+          />
 
-      {/* quiz */}
-      {parsedQuiz ? (
-        <div className="mt-10">
-          <Quiz quiz={parsedQuiz} />
+          {/* quiz */}
+          {parsedQuiz ? (
+            <div className="mt-10">
+              <Quiz quiz={parsedQuiz} />
+            </div>
+          ) : null}
+
+          {/* pager */}
+          <div className="mt-10 flex items-center justify-between">
+            {prev ? (
+              <Link
+                to={`/lesson/${prev.meta.id}`}
+                className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              >
+                ← {prev.meta.title}
+              </Link>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Link
+                to={`/lesson/${next.meta.id}`}
+                className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+              >
+                {next.meta.title} →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </div>
         </div>
-      ) : null}
-
-      {/* pager */}
-      <div className="mt-10 flex items-center justify-between">
-        {prev ? (
-          <Link
-            to={`/lesson/${prev.meta.id}`}
-            className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-          >
-            ← {prev.meta.title}
-          </Link>
-        ) : (
-          <span />
-        )}
-        {next ? (
-          <Link
-            to={`/lesson/${next.meta.id}`}
-            className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
-          >
-            {next.meta.title} →
-          </Link>
-        ) : (
-          <span />
-        )}
       </div>
     </div>
   );

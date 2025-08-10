@@ -4,6 +4,8 @@ import { lessonsIndex } from "@/content/loadLessons";
 import { Sidebar } from "@/components/Sidebar";
 import { SearchPalette } from "@/components/SearchPalette";
 import { TopNav } from "@/components/TopNav";
+import { ZenToggle } from "@/components/ZenToggle";
+import { LessonTOC } from "./components/LessonTOC";
 
 export default function App() {
   const outlet = useOutlet();
@@ -58,10 +60,13 @@ export default function App() {
 
       {/* Main with sidebar on large screens */}
       <main className="max-w-8xl px-4 py-8 flex-1">
-        <div className="grid gap-8 lg:grid-cols-[260px_1fr_260px]">
+        <div className="layout-grid grid gap-8 lg:grid-cols-[260px_1fr_260px]">
           <Sidebar />
           <div className="w-full">{outlet}</div>
-          <div />
+          <div className="app-rightbar">
+            {/* Mount a global TOC that reacts to lesson pages; when not on lesson, it will render nothing */}
+            <LessonTOC markdown={getCurrentLessonBody() || ""} />
+          </div>
         </div>
       </main>
 
@@ -71,9 +76,19 @@ export default function App() {
 
       {/* Command Palette */}
       <SearchPalette />
+      <ZenToggle />
     </div>
   );
 }
 
 /** Simple dropdown using <details> (no extra deps) */
 //
+
+function getCurrentLessonBody(): string | null {
+  if (typeof window === "undefined") return null;
+  const m = window.location.pathname.match(/^\/lesson\/(.+)$/);
+  if (!m) return null;
+  const id = decodeURIComponent(m[1]);
+  const found = lessonsIndex.find((l) => l.meta.id === id);
+  return found ? found.body : null;
+}

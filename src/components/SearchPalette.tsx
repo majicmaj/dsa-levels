@@ -9,6 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useNavigate } from "react-router-dom";
+import { toggleZen } from "@/lib/zen";
 
 export function SearchPalette() {
   const [open, setOpen] = useState(false);
@@ -26,14 +27,20 @@ export function SearchPalette() {
     function onOpen() {
       setOpen(true);
     }
+    function onToggleZen() {
+      toggleZen();
+      setOpen(false);
+    }
     window.addEventListener("keydown", onKey);
     window.addEventListener("open-search-palette", onOpen as EventListener);
+    window.addEventListener("toggle-zen", onToggleZen as EventListener);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(
         "open-search-palette",
         onOpen as EventListener
       );
+      window.removeEventListener("toggle-zen", onToggleZen as EventListener);
     };
   }, []);
 
@@ -66,6 +73,15 @@ export function SearchPalette() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <CommandList>
+            <CommandGroup heading="Actions">
+              <CommandItem
+                onClick={() =>
+                  window.dispatchEvent(new CustomEvent("toggle-zen"))
+                }
+              >
+                <span className="truncate">Toggle Zen Mode</span>
+              </CommandItem>
+            </CommandGroup>
             <CommandGroup heading="Title matches">
               {titleMatches.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-zinc-500">

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { openSearchPalette } from "@/lib/searchPalette";
-import { School2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { isZen, toggleZen } from "@/lib/zen";
 
 type Props = {
   defaultHref: string;
@@ -19,6 +20,7 @@ export function TopNav({
   onToggleTheme,
 }: Props) {
   const [hidden, setHidden] = useState(false);
+  const [zenState, setZenState] = useState<boolean>(() => isZen());
   const lastY = useRef(0);
 
   useEffect(() => {
@@ -33,20 +35,32 @@ export function TopNav({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    function onZenChanged(e: Event) {
+      const detail = (e as CustomEvent<boolean>).detail;
+      if (typeof detail === "boolean") setZenState(detail);
+    }
+    window.addEventListener("zen-changed", onZenChanged as EventListener);
+    return () => window.removeEventListener("zen-changed", onZenChanged as EventListener);
+  }, []);
+
   return (
     <header
       className={
-        "sticky top-0 z-30 border-b bg-background/80 backdrop-blur transition-transform duration-200 " +
+        "app-topnav sticky top-0 z-30 border-b bg-background/80 backdrop-blur transition-transform duration-200 " +
         (hidden ? "-translate-y-full" : "translate-y-0")
       }
     >
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
         <Link
           to={defaultHref}
-          className="font-display text-xl"
+          className="text-xl items-center flex"
           title="DSA Levels"
         >
-          <School2 />
+          <span className="mr-2 inline-flex h-6 w-6 items-center justify-center text-primary">
+            <Logo className="h-6 w-6" />
+          </span>
+          DSA Levels
         </Link>
 
         {/* Left group: topic buttons (desktop) */}
@@ -64,6 +78,14 @@ export function TopNav({
 
         {/* Right group */}
         <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => toggleZen()}
+            className="hidden rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
+            aria-label="Toggle zen"
+            title="Toggle zen mode"
+          >
+            {zenState ? "Exit Zen" : "Zen"}
+          </button>
           <nav className="hidden items-center gap-1 sm:flex">
             {levels.map(([lvl, count]) => (
               <Link

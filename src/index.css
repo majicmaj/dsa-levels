@@ -276,3 +276,10 @@
   .prose pre  {@apply rounded-xl border bg-white/60 dark:bg-zinc-900/50 p-4 my-4 overflow-x-auto;}
   .prose blockquote {@apply border-l-4 pl-4 italic text-zinc-600 dark:text-zinc-300;}
 }
+
+/* Zen mode layout helpers */
+.zen .app-topnav { display: none !important; }
+.zen .app-sidebar { display: none !important; }
+.zen .app-rightbar { display: none !important; }
+.zen .layout-grid { grid-template-columns: 1fr !important; }
+.zen .lesson-grid { grid-template-columns: 1fr !important; }
