@@ -19,7 +19,8 @@ export function ZenToggle() {
       if (typeof detail === "boolean") setZen(detail);
     }
     window.addEventListener("zen-changed", onZenChanged as EventListener);
-    return () => window.removeEventListener("zen-changed", onZenChanged as EventListener);
+    return () =>
+      window.removeEventListener("zen-changed", onZenChanged as EventListener);
   }, []);
 
   if (!zen) return null;
@@ -48,7 +49,8 @@ export function ZenEnterButton() {
       if (typeof detail === "boolean") setZen(detail);
     }
     window.addEventListener("zen-changed", onZenChanged as EventListener);
-    return () => window.removeEventListener("zen-changed", onZenChanged as EventListener);
+    return () =>
+      window.removeEventListener("zen-changed", onZenChanged as EventListener);
   }, []);
 
   if (zen) return null;

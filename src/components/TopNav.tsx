@@ -41,7 +41,8 @@ export function TopNav({
       if (typeof detail === "boolean") setZenState(detail);
     }
     window.addEventListener("zen-changed", onZenChanged as EventListener);
-    return () => window.removeEventListener("zen-changed", onZenChanged as EventListener);
+    return () =>
+      window.removeEventListener("zen-changed", onZenChanged as EventListener);
   }, []);
 
   return (
