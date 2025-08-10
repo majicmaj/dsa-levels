@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { lessonsIndex } from "@/content/loadLessons";
+import { compareLessons } from "@/lib/utils";
 import { Rocket, BookOpen, ListChecks, ChevronRight, Play } from "lucide-react";
 
 const PROGRESS_KEY = "progress.completedIds";
@@ -64,7 +65,7 @@ function Home() {
       (a, b) =>
         a.meta.level - b.meta.level ||
         a.meta.topic.localeCompare(b.meta.topic) ||
-        a.meta.title.localeCompare(b.meta.title)
+        compareLessons(a, b)
     );
     const nextLesson = unlocked[0];
     const recommended = (unlocked.length ? unlocked : lessonsIndex)

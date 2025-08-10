@@ -74,10 +74,16 @@ export default function LessonPage() {
   const unmet = prereqs.filter((p) => !completed.has(p.meta.id));
   const siblings = lessonsIndex
     .filter((l) => l.meta.topic === lesson.meta.topic)
-    .sort(
-      (a, b) =>
-        a.meta.level - b.meta.level || a.meta.title.localeCompare(b.meta.title)
-    );
+    .sort((a, b) => {
+      // Within same topic, prefer sorting by level then lesson order then title
+      const levelDelta = a.meta.level - b.meta.level;
+      if (levelDelta !== 0) return levelDelta;
+      const aOrder = (a.meta.lesson ?? 9999).toString();
+      const bOrder = (b.meta.lesson ?? 9999).toString();
+      if (aOrder !== bOrder)
+        return aOrder.localeCompare(bOrder, undefined, { numeric: true });
+      return a.meta.title.localeCompare(b.meta.title);
+    });
   const idx = siblings.findIndex((s) => s.meta.id === id);
   const prev = idx > 0 ? siblings[idx - 1] : undefined;
   const next =

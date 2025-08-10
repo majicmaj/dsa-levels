@@ -19,14 +19,14 @@ export function MD({ markdown, allowHtml = false }: Props) {
           ...(allowHtml ? [rehypeRaw] : []),
         ]}
         components={{
-          pre: (props) => {
-            const child = Children.only(props.children) as React.ReactElement;
-            const code = child.props.children as string;
-            const lang =
-              (child.props.className as string | undefined)?.replace(
-                "language-",
-                ""
-              ) || "";
+          pre: ({ children }) => {
+            const child = Children.only(children) as React.ReactElement<{
+              className?: string;
+              children?: string | string[];
+            }>;
+            const raw = child.props?.children ?? "";
+            const code = Array.isArray(raw) ? raw.join("") : String(raw);
+            const lang = child.props?.className?.replace("language-", "") ?? "";
             return <CodeBlock code={code} lang={lang} />;
           },
         }}

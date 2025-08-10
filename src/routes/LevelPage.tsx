@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { lessonsIndex } from "@/content/loadLessons";
+import { compareLessons } from "@/lib/utils";
 
 export default function LevelPage() {
   const { level = "1" } = useParams<{ level: string }>();
@@ -8,12 +9,11 @@ export default function LevelPage() {
   const lessons = lessonsIndex
     .filter((l) => l.meta.level === levelNum)
     .sort(
-      (a, b) =>
-        a.meta.topic.localeCompare(b.meta.topic) ||
-        a.meta.title.localeCompare(b.meta.title)
+      (a, b) => a.meta.topic.localeCompare(b.meta.topic) || compareLessons(a, b)
     );
 
   const topics = groupBy(lessons, (l) => l.meta.topic);
+  const sortedTopics = Object.keys(topics).sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -31,13 +31,13 @@ export default function LevelPage() {
         </div>
       ) : (
         <div className="space-y-10">
-          {Object.entries(topics).map(([topic, items]) => (
+          {sortedTopics.map((topic) => (
             <section key={topic}>
               <h2 className="font-display text-2xl mb-3">
                 {capitalize(topic)}
               </h2>
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((l) => (
+                {topics[topic].map((l) => (
                   <li
                     key={l.meta.id}
                     className="rounded-xl border bg-card text-card-foreground p-4"

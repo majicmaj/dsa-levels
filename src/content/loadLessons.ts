@@ -17,6 +17,7 @@ export type LessonMeta = {
   title: string;
   topic: string;
   level: number;
+  lesson?: string | number;
   prereqs?: string[];
   tags?: string[];
   est_minutes?: number;
@@ -45,6 +46,7 @@ export function loadLessons(): Lesson[] {
       title: data.title ?? id,
       topic: data.topic ?? path.split("/")[3],
       level: Number(data.level ?? path.match(/\/l(\d)-/)?.[1] ?? 1),
+      lesson: data.lesson ?? undefined,
       prereqs: data.prereqs ?? [],
       tags: data.tags ?? [],
       est_minutes: data.est_minutes ?? undefined,
