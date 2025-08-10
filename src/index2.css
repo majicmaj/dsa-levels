@@ -1,0 +1,68 @@
+/* 1) Fonts FIRST (before Tailwind import) */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;600;800&display=swap");
+
+/* 2) Tailwind v4 */
+@import "tailwindcss";
+
+/* 3) Theme tokens -> Tailwind utilities */
+@theme {
+  /* Fonts */
+  --font-display: "Cinzel", serif;   /* gives you class: font-display */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Color palette (OKLCH picks for marble/obsidian/bronze/laurel/aegean) */
+  --color-marble-50:  oklch(0.97 0.01 90);
+  --color-marble-100: oklch(0.94 0.01 90);
+  --color-obsidian-900: oklch(0.22 0.03 270);
+  --color-bronze-600: oklch(0.63 0.11 70);   /* warm accent */
+  --color-laurel-500: oklch(0.67 0.08 150);  /* leaf accent */
+  --color-aegean-500: oklch(0.7 0.08 210);   /* soft blue */
+
+  /* Map Tailwind utility colors to these tokens */
+  --color-background: var(--color-marble-50);
+  --color-foreground: var(--color-obsidian-900);
+  --color-primary:    var(--color-bronze-600);
+  --color-accent:     var(--color-laurel-500);
+}
+
+/* 4) shadcn/ui expects CSS variables like --background/--foreground. */
+:root {
+  --radius: 0.75rem;
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-marble-100);
+  --card-foreground: var(--color-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: var(--color-accent);
+  --accent-foreground: oklch(0.15 0.01 270);
+  --border: oklch(0.88 0.01 90);
+  --ring: var(--color-aegean-500);
+}
+
+/* Dark mode variant (override only the CSS variables) */
+.dark {
+  --background: oklch(0.18 0.02 270);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.22 0.03 270);
+  --card-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.78 0.16 70);
+  --accent: oklch(0.72 0.10 150);
+  --border: oklch(1 0 0 / 12%);
+  --ring: oklch(0.70 0.08 210);
+}
+
+/* Minimal prose styling for markdown (no plugin needed) */
+@layer components {
+  .prose {
+    @apply text-foreground;
+    max-width: 72ch;
+  }
+  .prose h1 {@apply font-display text-3xl md:text-4xl mb-4;}
+  .prose h2 {@apply font-display text-2xl md:text-3xl mt-8 mb-3;}
+  .prose h3 {@apply font-display text-xl mt-6 mb-2;}
+  .prose p  {@apply leading-7 my-3;}
+  .prose code {@apply rounded px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800;}
+  .prose pre  {@apply rounded-xl border bg-white/60 dark:bg-zinc-900/50 p-4 my-4;}
+  .prose blockquote {@apply border-l-4 pl-4 italic text-zinc-600 dark:text-zinc-300;}
+}

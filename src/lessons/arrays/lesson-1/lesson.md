@@ -1,0 +1,292 @@
+---
+id: arrays-l1-overview
+title: "Arrays L1 — Overview & Mental Model"
+topic: arrays
+level: 1
+prereqs: []
+outcomes:
+  - Understand arrays as reference types with indexed access and a dynamic length
+  - Create arrays via literals, Array.of, Array(), and Array.from (know differences)
+  - Explain holes vs undefined and how iteration methods treat them
+  - Perform safe, shallow copies (slice, spread, Array.from) and know deep-copy caveats
+  - Recognize that array equality is by reference and implement a shallow value comparison
+tags: ["arrays","basics","references","copying","holes"]
+est_minutes: 25
+checks:
+  - type: quiz
+    id: arrays-l1-overview-quiz
+  - type: unit
+    entry: equalShallow.ts
+    tests: equalShallow.test.ts
+  - type: unit
+    entry: cloneThreeWays.ts
+    tests: cloneThreeWays.test.ts
+---
+
+## Why this matters
+
+Arrays are *the* workhorse collection in JavaScript/TypeScript. If you internalize their **reference semantics**, **creation/clone patterns**, and the **difference between holes and `undefined`**, you’ll avoid a huge class of bugs and write clearer, faster code.
+
+---
+
+## Mental model
+
+- An **array** is an **ordered, indexable** object whose `length` tracks the highest element index + 1 (not necessarily the actual count of filled slots).
+- Arrays are **reference types**. Assigning an array to another variable copies the **reference**, not the contents.
+- **Indices are strings under the hood** (property keys like `"0"`, `"1"`), but the language gives you sugar for numeric indexing.
+- Arrays can be **sparse** (have *holes*): indices that don’t exist at all (not even as `undefined` values).
+
+```ts
+const a = [10, 20];
+const b = a;        // b references the same array
+b.push(30);
+console.log(a);     // [10, 20, 30]  <-- changed via b
+````
+
+---
+
+## Creation patterns
+
+### Literal (preferred)
+
+```ts
+const xs = [1, 2, 3];
+```
+
+### `Array.of(…)` — always makes an array *with the given elements*
+
+```ts
+Array.of(5);     // [5]
+Array.of(1, 2);  // [1, 2]
+```
+
+### `Array()` / `new Array()` — **gotcha**: a single numeric arg creates holes
+
+```ts
+Array(5);        // [ <5 empty items> ]  <-- length 5, *holes*, not zeros
+new Array(5);    // same
+Array(1, 2, 3);  // [1, 2, 3]
+```
+
+### `Array.from(iterableOrArrayLike, mapFn?)`
+
+```ts
+Array.from('hi');                 // ['h','i']
+Array.from({ length: 3 }, (_, i) => i); // [0,1,2]  ← build with a mapper
+```
+
+---
+
+## Length & indexing
+
+* `arr.length` is mutable:
+
+```ts
+const arr = [1, 2, 3];
+arr.length = 1;   // truncates → [1]
+arr.length = 3;   // extends with holes → [1, <2 empty items>]
+```
+
+* **Holes vs `undefined`:**
+
+  * Hole: index is *missing entirely*. `i in arr` → `false`.
+  * `undefined`: index **exists** with value `undefined`. `i in arr` → `true`.
+
+* Iteration differences (details in L1-Iteration, but key idea now):
+
+  * `forEach`, `map`, `filter` **skip holes**.
+  * `for … of` and classic `for` **visit indices** that exist (you can decide how to treat holes).
+
+```ts
+const h = Array(3);         // [ <3 empty items> ]
+console.log(h[0]);          // undefined (but it's a hole)
+console.log(0 in h);        // false (no property "0")
+
+const u = [undefined];      // [ undefined ]
+console.log(0 in u);        // true
+```
+
+---
+
+## Copying (shallow) vs deep cloning
+
+**Shallow copies** duplicate the top-level elements, not nested objects.
+
+* `slice()`:
+
+```ts
+const a = [{ id: 1 }, { id: 2 }];
+const b = a.slice();
+b[0].id = 9;
+console.log(a[0].id);  // 9 (nested object shared)
+```
+
+* Spread `[...]`:
+
+```ts
+const b = [...a];
+```
+
+* `Array.from(a)`:
+
+```ts
+const b = Array.from(a);
+```
+
+**Deep cloning**: For arrays of primitives, shallow copy is “deep enough.”
+For nested objects, consider `structuredClone(a)` (browser/node support is now common) or a library. `JSON.parse(JSON.stringify(a))` is limited (drops functions, `Date`, `Map`/`Set`, etc.).
+
+---
+
+## Equality (reference vs value)
+
+```ts
+const x = [1,2,3];
+const y = [1,2,3];
+console.log(x === y); // false — different references
+
+const z = x;
+console.log(x === z); // true  — same reference
+```
+
+To compare *values*, you must check lengths and compare elements (exercise below).
+
+---
+
+## Common pitfalls
+
+* `Array(5)` **creates holes**, not `[5]`. Use `[5]` or `Array.of(5)`.
+* Assigning arrays copies **references**; mutating through one reference affects all aliases.
+* Shallow copies don’t clone nested objects.
+* Holes are skipped by many array methods and can surprise you.
+
+---
+
+## Walkthrough: diagnose & fix
+
+**Scenario:** You need a copy of a list to sort without changing the original.
+
+```ts
+const scores = [9, 4, 10, 6];
+
+// ❌ Mutates original:
+scores.sort((a, b) => a - b);
+
+// ✅ Copy then sort:
+const sorted = [...scores].sort((a, b) => a - b);
+// or: const sorted = scores.slice().sort((a, b) => a - b);
+```
+
+---
+
+## Exercises
+
+### 1) Clone an array three ways
+
+Create `cloneThreeWays(arr)` that returns an object with three shallow clones using:
+
+* `slice()`
+* spread `[...]`
+* `Array.from()`
+
+**Starter — `cloneThreeWays.ts`**
+
+```ts
+export function cloneThreeWays<T>(arr: T[]) {
+  // Return shape: { viaSlice: T[], viaSpread: T[], viaFrom: T[] }
+  // Your code here
+  return {
+    viaSlice: [],
+    viaSpread: [],
+    viaFrom: []
+  };
+}
+```
+
+**Requirements**
+
+* Each returned array must not be the same reference as `arr`.
+* Mutating any clone must not change the others (shallow copy).
+* If `arr` contains objects, acknowledge that nested objects are shared.
+
+---
+
+### 2) Shallow value equality
+
+Implement `equalShallow(a, b)` that returns `true` iff arrays have equal length and each pair of elements are strictly equal (`===`) in order.
+
+**Starter — `equalShallow.ts`**
+
+```ts
+export function equalShallow<T>(a: T[], b: T[]): boolean {
+  // Your code here
+  return false;
+}
+```
+
+**Edge cases to handle**
+
+* Different lengths
+* Empty arrays
+* `NaN` comparisons: note that `NaN === NaN` is `false`.
+
+  * For this L1 exercise, keep strict equality semantics (treat `NaN` as not equal).
+  * We’ll revisit numeric equality nuances later.
+
+---
+
+## Quiz (checks)
+
+> This quiz is auto-graded in the app (see front matter `checks`).
+
+1. **What does `Array(3)` create?**
+   A) `[3]`
+   B) `[undefined, undefined, undefined]` with defined indices
+   C) An array with length 3 and **holes** (no indices defined) ✅
+   D) A type error
+
+2. **Which creates `[5]`?**
+   A) `Array(5)`
+   B) `Array.of(5)` ✅
+   C) `new Array(5)`
+   D) `Array.from(5)`
+
+3. Given:
+
+   ```ts
+   const a = [1,2]; 
+   const b = a; 
+   b.push(3);
+   ```
+
+   What is `a` now?
+   A) `[1,2]`
+   B) `[1,2,3]` ✅
+   C) `[3]`
+   D) Throws an error
+
+4. **Which statements are true? (choose all that apply)**
+
+   * `slice()` returns a new array ✅
+   * `[...arr]` returns a new array ✅
+   * `Array.from(arr)` returns a new array ✅
+   * `splice()` returns a new array without mutating the original ❌ (it mutates)
+
+---
+
+## Takeaways
+
+* Arrays are **reference** types; assignment aliases the same array.
+* Prefer **literals** and `Array.of` for clear creation; beware `Array(n)` holes.
+* Use `slice`, spread, or `Array.from` for **shallow copies**.
+* Holes ≠ `undefined`; many methods skip holes.
+* Equality by reference; implement your own comparison to check values.
+
+---
+
+## What’s next
+
+Proceed to **Arrays L1 — Adding & Removing (Basics)** to learn how end/front operations behave and why some are cheap while others are costly.
+
+```
+```
