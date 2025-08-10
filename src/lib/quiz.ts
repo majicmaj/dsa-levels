@@ -6,7 +6,7 @@ export type QuizOption = {
 
 export type QuizQuestion = {
   id: string; // q1, q2 ...
-  prompt: string;
+  prompt: string; // may include multiline markdown, e.g., fenced code blocks
   options: QuizOption[];
 };
 
@@ -65,11 +65,16 @@ export function parseQuizFromSection(
 
   // Group into question blocks
   const questions: QuizQuestion[] = [];
-  let current: { promptLines: string[]; optionLines: string[] } | null = null;
+  let current: {
+    promptLines: string[];
+    optionLines: string[];
+    optionsStarted: boolean;
+  } | null = null;
+  let inFence = false;
 
   const flush = () => {
     if (!current) return;
-    const prompt = current.promptLines.join(" ").trim();
+    const prompt = current.promptLines.join("\n").trim();
     const options = parseOptions(current.optionLines);
     if (prompt && options.length > 0) {
       const id = `q${questions.length + 1}`;
@@ -84,17 +89,40 @@ export function parseQuizFromSection(
     if (m) {
       // New question
       flush();
-      current = { promptLines: [m[2].trim()], optionLines: [] };
+      current = {
+        promptLines: [m[2].trim()],
+        optionLines: [],
+        optionsStarted: false,
+      };
       continue;
     }
     if (!current) continue;
 
-    // Stop collection on blank heading or horizontal rule
+    // Stop collection on horizontal rule or next heading
     if (/^---\s*$/.test(line) || /^##\s+/.test(line.trim())) {
       flush();
       break;
     }
-    current.optionLines.push(line);
+
+    // Track code fences to avoid misinterpreting lines inside as options
+    if (/^```/.test(line.trim())) {
+      inFence = !inFence;
+      // Fenced lines belong to prompt until options start
+      if (!current.optionsStarted) current.promptLines.push(line);
+      else current.optionLines.push(line); // rare, but preserve
+      continue;
+    }
+
+    // Determine if this line starts options (outside code fences)
+    const trimmed = line.trim();
+    const isOptionLine =
+      !inFence && (/^[A-Z]\)\s+/.test(trimmed) || /^\*\s+/.test(trimmed));
+    if (!current.optionsStarted && isOptionLine) {
+      current.optionsStarted = true;
+    }
+
+    if (current.optionsStarted) current.optionLines.push(line);
+    else current.promptLines.push(line);
   }
   flush();
 

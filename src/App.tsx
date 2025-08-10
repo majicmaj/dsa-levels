@@ -10,6 +10,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function App() {
   const outlet = useOutlet();
@@ -137,8 +138,13 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main */}
-      <main className="mx-auto max-w-6xl px-4 py-8">{outlet}</main>
+      {/* Main with sidebar on large screens */}
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+          <Sidebar />
+          <div>{outlet}</div>
+        </div>
+      </main>
 
       <footer className="border-t py-6 text-center text-sm opacity-70">
         Built with Vite · Tailwind v4 · shadcn/ui · React Router

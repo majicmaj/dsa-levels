@@ -1,7 +1,13 @@
 import { MD } from "@/content/md";
 import type { Lesson } from "@/content/loadLessons";
 
-export default function LessonView({ lesson }: { lesson: Lesson }) {
+export default function LessonView({
+  lesson,
+  markdown,
+}: {
+  lesson: Lesson;
+  markdown?: string;
+}) {
   return (
     <article className="mx-auto px-6 py-8 lg:px-10">
       <header className="mb-6">
@@ -10,7 +16,7 @@ export default function LessonView({ lesson }: { lesson: Lesson }) {
           {lesson.meta.topic} · Level {lesson.meta.level}
         </p>
       </header>
-      <MD markdown={lesson.body} />
+      <MD markdown={markdown ?? lesson.body} />
     </article>
   );
 }
