@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { lessonsIndex, type Lesson } from "@/content/loadLessons";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { compareLessons } from "@/lib/utils";
 
 export function Sidebar() {
@@ -38,36 +37,28 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:block">
       <div className="sticky top-24">
-        <Card>
-          <CardHeader>
-            <h2 className="font-display text-xl">Browse</h2>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <h3 className="mb-2 text-sm font-semibold text-zinc-600">
-                Topics
-              </h3>
-              <ul className="space-y-1">
-                {topicsAlpha.map(([t, count]) => {
-                  const href = `/topic/${t}`;
-                  const current = getCurrentLesson(location.pathname);
-                  const active =
-                    location.pathname.startsWith(href) ||
-                    current?.meta.topic === t;
-                  // lessons list hidden for now to match current design
-                  return (
-                    <li key={t}>
-                      <Link
-                        to={href}
-                        className={
-                          "flex items-center justify-between rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
-                          (active ? "border-primary/50" : "")
-                        }
-                      >
-                        <span>{capitalize(t)}</span>
-                        <span className="text-xs text-zinc-500">{count}</span>
-                      </Link>
-                      {/* {active && lessons.length ? (
+        <div>
+          <h3 className="mb-2 text-sm font-semibold text-zinc-600">Topics</h3>
+          <ul className="space-y-1">
+            {topicsAlpha.map(([t, count]) => {
+              const href = `/topic/${t}`;
+              const current = getCurrentLesson(location.pathname);
+              const active =
+                location.pathname.startsWith(href) || current?.meta.topic === t;
+              // lessons list hidden for now to match current design
+              return (
+                <li key={t}>
+                  <Link
+                    to={href}
+                    className={
+                      "flex items-center justify-between rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
+                      (active ? "border-primary/50" : "")
+                    }
+                  >
+                    <span>{capitalize(t)}</span>
+                    <span className="text-xs text-zinc-500">{count}</span>
+                  </Link>
+                  {/* {active && lessons.length ? (
                         <ul className="mt-1 space-y-1 border-l pl-3">
                           {lessons.map((l) => {
                             const isActive = current?.meta.id === l.meta.id;
@@ -92,77 +83,70 @@ export function Sidebar() {
                           })}
                         </ul>
                       ) : null} */}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold text-zinc-600">
-                Levels
-              </h3>
-              <ul className="grid grid-cols-5 gap-2">
-                {levelsAsc.map(([lvl, count]) => {
-                  const href = `/levels/${lvl}`;
-                  const current = getCurrentLesson(location.pathname);
-                  const active =
-                    location.pathname.startsWith(href) ||
-                    current?.meta.level === lvl;
+        <div className="mt-6">
+          <h3 className="mb-2 text-sm font-semibold text-zinc-600">Levels</h3>
+          <ul className="grid grid-cols-5 gap-2">
+            {levelsAsc.map(([lvl, count]) => {
+              const href = `/levels/${lvl}`;
+              const current = getCurrentLesson(location.pathname);
+              const active =
+                location.pathname.startsWith(href) ||
+                current?.meta.level === lvl;
+              return (
+                <li key={lvl}>
+                  <Link
+                    to={href}
+                    title={`${count} lesson(s)`}
+                    className={
+                      "flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
+                      (active ? "border-primary/50" : "")
+                    }
+                  >
+                    L{lvl}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          {(() => {
+            const current = getCurrentLesson(location.pathname);
+            const routeLevel = location.pathname.match(/^\/levels\/(\d+)/)?.[1];
+            const showLevel = routeLevel
+              ? Number(routeLevel)
+              : current?.meta.level;
+            if (!showLevel) return null;
+            const items = byLevel.get(showLevel) ?? [];
+            return items.length ? (
+              <ul className="mt-3 space-y-2 border-l pl-3">
+                {items.map((l) => {
+                  const isActive = current?.meta.id === l.meta.id;
                   return (
-                    <li key={lvl}>
+                    <li key={l.meta.id}>
                       <Link
-                        to={href}
-                        title={`${count} lesson(s)`}
+                        to={`/lesson/${l.meta.id}`}
                         className={
-                          "flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
-                          (active ? "border-primary/50" : "")
+                          "block rounded-md px-2 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
+                          (isActive
+                            ? "bg-zinc-50 dark:bg-zinc-900 text-primary"
+                            : "")
                         }
+                        title={`${capitalize(l.meta.topic)} · L${l.meta.level}`}
                       >
-                        L{lvl}
+                        {capitalize(l.meta.topic)} — {l.meta.title}
                       </Link>
                     </li>
                   );
                 })}
               </ul>
-              {(() => {
-                const current = getCurrentLesson(location.pathname);
-                const routeLevel =
-                  location.pathname.match(/^\/levels\/(\d+)/)?.[1];
-                const showLevel = routeLevel
-                  ? Number(routeLevel)
-                  : current?.meta.level;
-                if (!showLevel) return null;
-                const items = byLevel.get(showLevel) ?? [];
-                return items.length ? (
-                  <ul className="mt-3 space-y-1 border-l pl-3">
-                    {items.map((l) => {
-                      const isActive = current?.meta.id === l.meta.id;
-                      return (
-                        <li key={l.meta.id}>
-                          <Link
-                            to={`/lesson/${l.meta.id}`}
-                            className={
-                              "block rounded-md px-2 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
-                              (isActive
-                                ? "bg-zinc-50 dark:bg-zinc-900 text-primary"
-                                : "")
-                            }
-                            title={`${capitalize(l.meta.topic)} · L${
-                              l.meta.level
-                            }`}
-                          >
-                            {capitalize(l.meta.topic)} — {l.meta.title}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : null;
-              })()}
-            </div>
-          </CardContent>
-        </Card>
+            ) : null;
+          })()}
+        </div>
       </div>
     </aside>
   );

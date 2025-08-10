@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function SearchPalette() {
   const [open, setOpen] = useState(false);
@@ -23,8 +23,18 @@ export function SearchPalette() {
       }
       if (e.key === "Escape") setOpen(false);
     }
+    function onOpen() {
+      setOpen(true);
+    }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("open-search-palette", onOpen as EventListener);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(
+        "open-search-palette",
+        onOpen as EventListener
+      );
+    };
   }, []);
 
   const { titleMatches, contentMatches } = useMemo(() => {

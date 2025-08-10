@@ -57,10 +57,11 @@ export default function App() {
       />
 
       {/* Main with sidebar on large screens */}
-      <main className="mx-auto max-w-6xl px-4 py-8 flex-1">
-        <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+      <main className="max-w-8xl px-4 py-8 flex-1">
+        <div className="grid gap-8 lg:grid-cols-[260px_1fr_260px]">
           <Sidebar />
-          <div>{outlet}</div>
+          <div className="w-full">{outlet}</div>
+          <div />
         </div>
       </main>
 
