@@ -44,16 +44,39 @@ export function SearchPalette() {
     };
   }, []);
 
-  const { titleMatches, contentMatches } = useMemo(() => {
-    if (!query.trim()) return { titleMatches: [], contentMatches: [] };
-    const q = query.toLowerCase();
-    const titleMatches = lessonsIndex.filter((l) =>
-      l.meta.title.toLowerCase().includes(q)
-    );
-    const contentMatches = lessonsIndex.filter(
-      (l) => !titleMatches.includes(l) && l.body.toLowerCase().includes(q)
-    );
-    return { titleMatches, contentMatches };
+  const { titleMatches, contentMatches, tagMatches, tagMode } = useMemo(() => {
+    const trimmed = query.trim();
+    if (!trimmed)
+      return {
+        titleMatches: [],
+        contentMatches: [],
+        tagMatches: [],
+        tagMode: false,
+      };
+    const tagMode = trimmed.startsWith("#");
+    const q = (tagMode ? trimmed.slice(1) : trimmed).toLowerCase();
+
+    const titleMatches = tagMode
+      ? []
+      : lessonsIndex.filter((l) => l.meta.title.toLowerCase().includes(q));
+
+    const tagMatchesAll = lessonsIndex.filter((l) => {
+      const tags = (l.meta.tags ?? []).map((t) => t.toLowerCase());
+      return tags.some((t) => t.includes(q));
+    });
+    // Avoid duplicates with title matches
+    const tagMatches = tagMatchesAll.filter((l) => !titleMatches.includes(l));
+
+    const contentMatches = tagMode
+      ? []
+      : lessonsIndex.filter(
+          (l) =>
+            !titleMatches.includes(l) &&
+            !tagMatches.includes(l) &&
+            l.body.toLowerCase().includes(q)
+        );
+
+    return { titleMatches, contentMatches, tagMatches, tagMode };
   }, [query]);
 
   function onSelect(id: string) {
@@ -81,6 +104,27 @@ export function SearchPalette() {
               >
                 <span className="truncate">Toggle Zen Mode</span>
               </CommandItem>
+            </CommandGroup>
+            <CommandGroup
+              heading={tagMode ? "Tag matches (#query)" : "Tag matches"}
+            >
+              {tagMatches.length === 0 ? (
+                <div className="px-3 py-2 text-sm text-zinc-500">
+                  No matches
+                </div>
+              ) : (
+                tagMatches.map((l) => (
+                  <CommandItem
+                    key={l.meta.id}
+                    onClick={() => onSelect(l.meta.id)}
+                  >
+                    <span className="truncate">{l.meta.title}</span>
+                    <span className="text-xs text-zinc-500">
+                      {(l.meta.tags || []).slice(0, 3).join(", ")}
+                    </span>
+                  </CommandItem>
+                ))
+              )}
             </CommandGroup>
             <CommandGroup heading="Title matches">
               {titleMatches.length === 0 ? (

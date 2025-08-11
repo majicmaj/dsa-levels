@@ -1,69 +1,90 @@
-# React + TypeScript + Vite
+# DSA Levels
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive lessons for JavaScript and TypeScript data structures. Built with React, TypeScript, and Vite. Content is authored in Markdown with front matter and rendered with a lightweight prose theme.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Lessons in Markdown with front matter fields: `id`, `title`, `topic`, `level`, `lesson`, `tags`, `prereqs`, `checks`
+- Quiz support with local persistence and scoring
+- Search palette with title, content, and tag search (use `#tag` for tag-only)
+- Topic and level navigation with collapsible sidebar and active lesson highlighting
+- Lesson map (table of contents) with scroll tracking and hash navigation
+- Zen mode to focus on content
+- Code highlighting via Shiki with copy-to-clipboard and mobile overflow handling
+- Tailwind CSS v4 theme with dark mode
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Prerequisites
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node 18+
+- pnpm 9+
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Install and run
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Build and preview
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm build
+pnpm preview
 ```
+
+## Content Authoring
+
+Add lessons under `src/lessons/`. Each lesson has a `lesson.md` with front matter. Example:
+
+```yaml
+id: arrays-l1-overview
+title: Arrays L1 — Overview & Mental Model
+topic: arrays
+level: 1
+lesson: 1.1
+tags: [arrays, basics]
+prereqs: []
+checks:
+  - type: quiz
+    id: arrays-l1-overview-quiz
+```
+
+The `lesson` field is used to order lessons within a level (`1.1`, `1.2`, `2.3`).
+
+### Quizzes
+
+- Quizzes are parsed from a `## Quiz` section in Markdown
+- Completion and scores are stored in `localStorage` using keys:
+  - `quiz.submitted.{quizId}` and `quiz.score.{quizId}`
+
+## UI Notes
+
+- Sidebar groups by Topic or Level, supports expand and collapse all
+- Lesson map on the right tracks scroll and accounts for the sticky top navigation
+- Zen mode hides top navigation and sidebars; toggle from the top bar or Command Palette
+
+## Theming
+
+Theme tokens and prose styles are defined in `src/index.css`. Dark mode is toggled by adding the `dark` class to the root element.
+
+## Polyfills
+
+Some libraries expect Node globals in the browser. The project provides a Buffer polyfill:
+
+- `src/polyfills.ts` assigns `Buffer` from the `buffer` package to `window` and `globalThis`
+- Imported in `src/main.tsx` so it loads before the app
+
+`vite.config.ts` also enables basic Node polyfills for esbuild.
+
+## Scripts
+
+- `pnpm dev` run the development server
+- `pnpm build` type-check and build for production
+- `pnpm preview` preview the production build
+- `pnpm lint` run ESLint
+
+## License
+
+MIT
