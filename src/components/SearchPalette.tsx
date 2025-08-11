@@ -99,12 +99,80 @@ export function SearchPalette() {
         anchors: {} as Record<string, string>,
       };
     const tagMode = trimmed.startsWith("#") || mode === "tag";
-    const q = (tagMode ? trimmed.slice(1) : trimmed).toLowerCase();
+    const qRaw = tagMode ? trimmed.slice(1) : trimmed;
+    const q = qRaw.toLowerCase();
 
-    const titleMatches =
+    // Helper: unique by lesson id
+    const uniq = (xs: typeof lessonsIndex) => {
+      const seen = new Set<string>();
+      const out: typeof lessonsIndex = [];
+      for (const l of xs) {
+        if (!seen.has(l.meta.id)) {
+          seen.add(l.meta.id);
+          out.push(l);
+        }
+      }
+      return out;
+    };
+
+    // Detect topic token in the query (arrays|strings|objects|numbers|set|map)
+    const allTopics = Array.from(
+      new Set(lessonsIndex.map((l) => l.meta.topic))
+    );
+    const topicToken = allTopics.find((t) =>
+      new RegExp(`(^|\\b)${t}(\\b|$)`, "i").test(q)
+    );
+
+    // Detect lesson code pattern like "2.1"
+    const codeMatch = q.match(/\b(\d+)\.(\d+)\b/);
+    const codeString = codeMatch
+      ? `${parseInt(codeMatch[1], 10)}.${parseInt(codeMatch[2], 10)}`
+      : null;
+
+    const lessonCodeOf = (l: (typeof lessonsIndex)[number]) => {
+      const val = l.meta.lesson;
+      return val == null ? null : String(val);
+    };
+
+    let titleMatches =
       tagMode || mode === "content"
         ? []
         : lessonsIndex.filter((l) => l.meta.title.toLowerCase().includes(q));
+
+    // Topic-name driven matches
+    let topicMatches: typeof lessonsIndex = [];
+    if (
+      !tagMode &&
+      (mode === "all" || mode === "title") &&
+      topicToken &&
+      !codeString
+    ) {
+      topicMatches = lessonsIndex.filter(
+        (l) => l.meta.topic.toLowerCase() === topicToken.toLowerCase()
+      );
+    }
+
+    // Lesson code matches (e.g., "2.1" or combined "Arrays 2.1")
+    let codeMatches: typeof lessonsIndex = [];
+    if (!tagMode && (mode === "all" || mode === "title") && codeString) {
+      codeMatches = lessonsIndex.filter((l) => {
+        const lessonStr = lessonCodeOf(l);
+        if (!lessonStr) return false;
+        if (topicToken)
+          return (
+            l.meta.topic.toLowerCase() === topicToken.toLowerCase() &&
+            lessonStr === codeString
+          );
+        return lessonStr === codeString;
+      });
+    }
+
+    // Merge: prioritize code matches first; then title, then broad topic matches
+    titleMatches = uniq([
+      ...(codeMatches ?? []),
+      ...titleMatches,
+      ...topicMatches,
+    ]);
 
     const tagMatchesAll = lessonsIndex.filter((l) => {
       const tags = (l.meta.tags ?? []).map((t) => t.toLowerCase());
