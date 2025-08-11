@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { lessonsIndex } from "@/content/loadLessons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -9,8 +9,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { useNavigate } from "react-router-dom";
-import { toggleZen } from "@/lib/zen";
+import { toggleZen, isZen } from "@/lib/zen";
 import { ChevronDown } from "lucide-react";
+import { Button } from "./ui/button";
 
 export function SearchPalette() {
   const [open, setOpen] = useState(false);
@@ -21,6 +22,13 @@ export function SearchPalette() {
     titles: true,
     contents: true,
   });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [zenState, setZenState] = useState<boolean>(() => isZen());
+  const [isDark, setIsDark] = useState<boolean>(() =>
+    typeof document !== "undefined"
+      ? document.documentElement.classList.contains("dark")
+      : false
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,11 +44,27 @@ export function SearchPalette() {
     }
     function onToggleZen() {
       toggleZen();
-      setOpen(false);
+      setZenState(isZen());
+    }
+    function onToggleTheme() {
+      const root = document.documentElement;
+      const next = !root.classList.contains("dark");
+      root.classList.toggle("dark", next);
+      try {
+        localStorage.setItem("theme", next ? "dark" : "light");
+      } catch {
+        /* ignore */
+      }
+      setIsDark(next);
+    }
+    function onZenChanged() {
+      setZenState(isZen());
     }
     window.addEventListener("keydown", onKey);
     window.addEventListener("open-search-palette", onOpen as EventListener);
     window.addEventListener("toggle-zen", onToggleZen as EventListener);
+    window.addEventListener("toggle-theme", onToggleTheme as EventListener);
+    window.addEventListener("zen-changed", onZenChanged as EventListener);
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener(
@@ -48,6 +72,11 @@ export function SearchPalette() {
         onOpen as EventListener
       );
       window.removeEventListener("toggle-zen", onToggleZen as EventListener);
+      window.removeEventListener(
+        "toggle-theme",
+        onToggleTheme as EventListener
+      );
+      window.removeEventListener("zen-changed", onZenChanged as EventListener);
     };
   }, []);
 
@@ -146,19 +175,25 @@ export function SearchPalette() {
     };
   }, [query, mode]);
 
-  function onSelect(id: string) {
-    setOpen(false);
-    setQuery("");
-    navigate(`/lesson/${id}`);
-  }
+  const onSelect = useCallback(
+    (id: string) => {
+      setOpen(false);
+      setQuery("");
+      navigate(`/lesson/${id}`);
+    },
+    [navigate]
+  );
 
-  function onSelectContent(id: string) {
-    setOpen(false);
-    setQuery("");
-    const hash = anchors?.[id];
-    if (hash) navigate(`/lesson/${id}#${hash}`);
-    else navigate(`/lesson/${id}`);
-  }
+  const onSelectContent = useCallback(
+    (id: string) => {
+      setOpen(false);
+      setQuery("");
+      const hash = anchors?.[id];
+      if (hash) navigate(`/lesson/${id}#${hash}`);
+      else navigate(`/lesson/${id}`);
+    },
+    [navigate, anchors]
+  );
 
   function slugify(s: string): string {
     return s
@@ -168,6 +203,86 @@ export function SearchPalette() {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-");
   }
+
+  // Build a flat list of visible results in display order for keyboard nav
+  type ResultItem = { kind: "tag" | "title" | "content"; id: string };
+  const visibleResults: ResultItem[] = useMemo(() => {
+    const list: ResultItem[] = [];
+    if ((mode === "all" || mode === "tag") && sectionsOpen.tags) {
+      for (const l of tagMatches) list.push({ kind: "tag", id: l.meta.id });
+    }
+    if ((mode === "all" || mode === "title") && sectionsOpen.titles) {
+      for (const l of titleMatches) list.push({ kind: "title", id: l.meta.id });
+    }
+    if ((mode === "all" || mode === "content") && sectionsOpen.contents) {
+      for (const l of contentMatches)
+        list.push({ kind: "content", id: l.meta.id });
+    }
+    return list;
+  }, [mode, sectionsOpen, tagMatches, titleMatches, contentMatches]);
+
+  // Keyboard navigation bindings when palette is open
+  useEffect(() => {
+    if (!open) return;
+    function onNavKey(e: KeyboardEvent) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (visibleResults.length === 0) return;
+        setSelectedIndex((i) => Math.min(visibleResults.length - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (visibleResults.length === 0) return;
+        setSelectedIndex((i) => Math.max(0, i - 1));
+      } else if (e.key === "Enter") {
+        if (visibleResults.length === 0) return;
+        e.preventDefault();
+        const sel = visibleResults[selectedIndex];
+        if (!sel) return;
+        if (sel.kind === "content") onSelectContent(sel.id);
+        else onSelect(sel.id);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const order: Array<typeof mode> = ["all", "title", "content", "tag"];
+        const idx = order.indexOf(mode);
+        const nextIdx =
+          e.key === "ArrowRight"
+            ? (idx + 1) % order.length
+            : (idx + order.length - 1) % order.length;
+        setMode(order[nextIdx]);
+      }
+    }
+    window.addEventListener("keydown", onNavKey);
+    return () => window.removeEventListener("keydown", onNavKey);
+  }, [open, visibleResults, selectedIndex, mode, onSelect, onSelectContent]);
+
+  // Reset selection to first item whenever results change
+  useEffect(() => {
+    if (visibleResults.length > 0) setSelectedIndex(0);
+    else setSelectedIndex(0);
+  }, [visibleResults.length]);
+
+  // Map for quick lookup of item index by kind+id
+  const resultIndexByKey = useMemo(() => {
+    const m = new Map<string, number>();
+    visibleResults.forEach((r, i) => m.set(`${r.kind}:${r.id}`, i));
+    return m;
+  }, [visibleResults]);
+
+  // Ensure selected item stays in view
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>(
+      `[data-result-index="${selectedIndex}"]`
+    );
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
+
+  // Ensure selected item stays in view
+  useEffect(() => {
+    const el = document.querySelector<HTMLElement>(
+      `[data-result-index="${selectedIndex}"]`
+    );
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -190,23 +305,25 @@ export function SearchPalette() {
                   ["tag", "Tags"],
                 ] as const
               ).map(([key, label]) => (
-                <button
+                <Button
                   key={key}
                   onClick={() => setMode(key)}
-                  className={
-                    "rounded-md px-2 py-1 transition-colors " +
-                    (mode === key
-                      ? "bg-zinc-100 dark:bg-zinc-900"
-                      : "hover:bg-zinc-100 dark:hover:bg-zinc-900")
-                  }
+                  variant={mode === key ? "default" : "ghost"}
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
             {(() => {
               const q = query.trim().toLowerCase();
-              const actions = ["toggle zen mode"];
+              const actions = [
+                "toggle zen mode",
+                "zen",
+                "toggle theme",
+                "theme",
+                "dark",
+                "light",
+              ];
               const show = q === "" || actions.some((a) => a.includes(q));
               if (!show) return null;
               return (
@@ -216,7 +333,52 @@ export function SearchPalette() {
                       window.dispatchEvent(new CustomEvent("toggle-zen"))
                     }
                   >
-                    <span className="truncate">Toggle Zen Mode</span>
+                    <div className="flex w-full items-center justify-between">
+                      <span className="truncate">Zen Mode</span>
+                      <span
+                        className={
+                          "inline-flex h-5 w-9 items-center rounded-full border px-0.5 " +
+                          (zenState
+                            ? "bg-emerald-500/20 border-emerald-500"
+                            : "bg-zinc-100 dark:bg-zinc-900")
+                        }
+                      >
+                        <span
+                          className={
+                            "h-4 w-4 rounded-full bg-current transition-transform " +
+                            (zenState
+                              ? "translate-x-4 text-emerald-600"
+                              : "translate-x-0 text-zinc-400")
+                          }
+                        />
+                      </span>
+                    </div>
+                  </CommandItem>
+                  <CommandItem
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("toggle-theme"))
+                    }
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <span className="truncate">Theme</span>
+                      <span
+                        className={
+                          "inline-flex h-5 w-9 items-center rounded-full border px-0.5 " +
+                          (isDark
+                            ? "bg-blue-500/20 border-blue-500"
+                            : "bg-zinc-100 dark:bg-zinc-900")
+                        }
+                      >
+                        <span
+                          className={
+                            "h-4 w-4 rounded-full bg-current transition-transform " +
+                            (isDark
+                              ? "translate-x-4 text-blue-600"
+                              : "translate-x-0 text-zinc-400")
+                          }
+                        />
+                      </span>
+                    </div>
                   </CommandItem>
                 </CommandGroup>
               );
@@ -246,17 +408,40 @@ export function SearchPalette() {
                         No matches
                       </div>
                     ) : (
-                      tagMatches.map((l) => (
-                        <CommandItem
-                          key={l.meta.id}
-                          onClick={() => onSelect(l.meta.id)}
-                        >
-                          <span className="truncate">{l.meta.title}</span>
-                          <span className="text-xs text-zinc-500">
-                            {l.meta.topic} · L{l.meta.level}
-                          </span>
-                        </CommandItem>
-                      ))
+                      tagMatches.map((l) => {
+                        const idx =
+                          resultIndexByKey.get(`tag:${l.meta.id}`) ?? -1;
+                        const selected = idx === selectedIndex;
+                        return (
+                          <CommandItem
+                            key={l.meta.id}
+                            data-result-index={idx}
+                            aria-selected={selected}
+                            className={
+                              selected ? "bg-zinc-100 dark:bg-zinc-900" : ""
+                            }
+                            onClick={() => onSelect(l.meta.id)}
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <span
+                                className={
+                                  "h-2 w-2 rounded-full " +
+                                  (selected
+                                    ? "bg-primary"
+                                    : "bg-zinc-300 dark:bg-zinc-700")
+                                }
+                                aria-hidden="true"
+                              />
+                              <div className="flex w-full items-center justify-between">
+                                <span className="truncate">{l.meta.title}</span>
+                                <span className="text-xs text-zinc-500">
+                                  {l.meta.topic} · L{l.meta.level}
+                                </span>
+                              </div>
+                            </div>
+                          </CommandItem>
+                        );
+                      })
                     )}
                   </CommandGroup>
                 ) : null}
@@ -285,17 +470,40 @@ export function SearchPalette() {
                         No matches
                       </div>
                     ) : (
-                      titleMatches.map((l) => (
-                        <CommandItem
-                          key={l.meta.id}
-                          onClick={() => onSelect(l.meta.id)}
-                        >
-                          <span className="truncate">{l.meta.title}</span>
-                          <span className="text-xs text-zinc-500">
-                            {l.meta.topic} · L{l.meta.level}
-                          </span>
-                        </CommandItem>
-                      ))
+                      titleMatches.map((l) => {
+                        const idx =
+                          resultIndexByKey.get(`title:${l.meta.id}`) ?? -1;
+                        const selected = idx === selectedIndex;
+                        return (
+                          <CommandItem
+                            key={l.meta.id}
+                            data-result-index={idx}
+                            aria-selected={selected}
+                            className={
+                              selected ? "bg-zinc-100 dark:bg-zinc-900" : ""
+                            }
+                            onClick={() => onSelect(l.meta.id)}
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <span
+                                className={
+                                  "h-2 w-2 rounded-full " +
+                                  (selected
+                                    ? "bg-primary"
+                                    : "bg-zinc-300 dark:bg-zinc-700")
+                                }
+                                aria-hidden="true"
+                              />
+                              <div className="flex w-full items-center justify-between">
+                                <span className="truncate">{l.meta.title}</span>
+                                <span className="text-xs text-zinc-500">
+                                  {l.meta.topic} · L{l.meta.level}
+                                </span>
+                              </div>
+                            </div>
+                          </CommandItem>
+                        );
+                      })
                     )}
                   </CommandGroup>
                 ) : null}
@@ -324,26 +532,49 @@ export function SearchPalette() {
                         No matches
                       </div>
                     ) : (
-                      contentMatches.map((l) => (
-                        <CommandItem
-                          key={l.meta.id}
-                          onClick={() => onSelectContent(l.meta.id)}
-                        >
-                          <div className="w-full">
-                            <div className="flex items-center justify-between">
-                              <span className="truncate">{l.meta.title}</span>
-                              <span className="ml-3 shrink-0 text-xs text-zinc-500">
-                                {l.meta.topic} · L{l.meta.level}
-                              </span>
-                            </div>
-                            {snippets[l.meta.id] ? (
-                              <div className="mt-1 line-clamp-2 text-xs text-zinc-500">
-                                {snippets[l.meta.id]}
+                      contentMatches.map((l) => {
+                        const idx =
+                          resultIndexByKey.get(`content:${l.meta.id}`) ?? -1;
+                        const selected = idx === selectedIndex;
+                        return (
+                          <CommandItem
+                            key={l.meta.id}
+                            data-result-index={idx}
+                            aria-selected={selected}
+                            className={
+                              selected ? "bg-zinc-100 dark:bg-zinc-900" : ""
+                            }
+                            onClick={() => onSelectContent(l.meta.id)}
+                          >
+                            <div className="flex w-full items-start gap-2">
+                              <span
+                                className={
+                                  "mt-1 h-2 w-2 rounded-full " +
+                                  (selected
+                                    ? "bg-primary"
+                                    : "bg-zinc-300 dark:bg-zinc-700")
+                                }
+                                aria-hidden="true"
+                              />
+                              <div className="w-full">
+                                <div className="flex items-center justify-between">
+                                  <span className="truncate">
+                                    {l.meta.title}
+                                  </span>
+                                  <span className="ml-3 shrink-0 text-xs text-zinc-500">
+                                    {l.meta.topic} · L{l.meta.level}
+                                  </span>
+                                </div>
+                                {snippets[l.meta.id] ? (
+                                  <div className="mt-1 line-clamp-2 text-xs text-zinc-500">
+                                    {snippets[l.meta.id]}
+                                  </div>
+                                ) : null}
                               </div>
-                            ) : null}
-                          </div>
-                        </CommandItem>
-                      ))
+                            </div>
+                          </CommandItem>
+                        );
+                      })
                     )}
                   </CommandGroup>
                 ) : null}
