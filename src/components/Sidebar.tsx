@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { lessonsIndex, type Lesson } from "@/content/loadLessons";
 import { compareLessons } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
@@ -49,26 +49,61 @@ export function Sidebar() {
     return { topicsAlpha, levelsAsc, byLevel, byTopic };
   }, []);
 
+  function computeBulkState() {
+    if (mode === "topic") {
+      const topicKeys = topicsAlpha.map(([t]) => t);
+      const allExpanded = topicKeys.every((t) => expandedTopTopics.has(t));
+      const expandAll = () => setExpandedTopTopics(new Set<string>(topicKeys));
+      const collapseAll = () => setExpandedTopTopics(new Set<string>());
+      return { allExpanded, expandAll, collapseAll };
+    } else {
+      const levelKeys = levelsAsc.map(([lvl]) => lvl);
+      const allExpanded = levelKeys.every((l) => expandedTopLevels.has(l));
+      const expandAll = () => setExpandedTopLevels(new Set<number>(levelKeys));
+      const collapseAll = () => setExpandedTopLevels(new Set<number>());
+      return { allExpanded, expandAll, collapseAll };
+    }
+  }
+
   return (
     <aside className="app-sidebar hidden lg:block">
       <div className="sticky top-24 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
         {/* Toggle */}
-        <div className="mb-3 inline-flex rounded-lg border p-1 text-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="inline-flex rounded-lg border p-1 text-sm">
+            <Button
+              variant={mode === "topic" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("topic")}
+              className="rounded-md"
+            >
+              By Topic
+            </Button>
+            <Button
+              variant={mode === "level" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("level")}
+              className="ml-1 rounded-md"
+            >
+              By Level
+            </Button>
+          </div>
           <Button
-            variant={mode === "topic" ? "default" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setMode("topic")}
-            className="rounded-md"
+            onClick={() => {
+              const { allExpanded, expandAll, collapseAll } =
+                computeBulkState();
+              if (allExpanded) collapseAll();
+              else expandAll();
+            }}
           >
-            By Topic
-          </Button>
-          <Button
-            variant={mode === "level" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("level")}
-            className="ml-1 rounded-md"
-          >
-            By Level
+            <ChevronUp
+              className={
+                "h-4 w-4 transition-transform " +
+                (computeBulkState().allExpanded ? "rotate-0" : "-rotate-180")
+              }
+            />
           </Button>
         </div>
 
@@ -383,3 +418,6 @@ function getCurrentLesson(pathname: string): Lesson | undefined {
   const id = m[1];
   return lessonsIndex.find((l) => l.meta.id === id);
 }
+
+// Helpers for expand/collapse all within current mode
+//

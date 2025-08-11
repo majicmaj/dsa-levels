@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { openSearchPalette } from "@/lib/searchPalette";
 import { Logo } from "@/components/Logo";
-import { isZen, toggleZen } from "@/lib/zen";
+import { isZen, setZen } from "@/lib/zen";
 
 type Props = {
   defaultHref: string;
@@ -48,7 +48,7 @@ export function TopNav({
   return (
     <header
       className={
-        "app-topnav sticky top-0 z-30 border-b bg-background/80 backdrop-blur transition-transform duration-200 " +
+        "app-topnav sticky top-0 z-30 bg-background/80 backdrop-blur transition-transform duration-200 " +
         (hidden ? "-translate-y-full" : "translate-y-0")
       }
     >
@@ -79,14 +79,6 @@ export function TopNav({
 
         {/* Right group */}
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => toggleZen()}
-            className="hidden rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
-            aria-label="Toggle zen"
-            title="Toggle zen mode"
-          >
-            {zenState ? "Exit Zen" : "Zen"}
-          </button>
           <nav className="hidden items-center gap-1 sm:flex">
             {levels.map(([lvl, count]) => (
               <Link
@@ -99,6 +91,14 @@ export function TopNav({
               </Link>
             ))}
           </nav>
+          <button
+            onClick={() => setZen(!zenState)}
+            className="hidden rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
+            aria-label="Toggle zen"
+            title="Toggle zen mode"
+          >
+            {zenState ? "Exit Zen" : "Zen"}
+          </button>
 
           <button
             onClick={() => openSearchPalette()}

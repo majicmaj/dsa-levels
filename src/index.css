@@ -275,6 +275,12 @@
   /* .prose code {@apply rounded px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800;} */
   .prose pre  {@apply rounded-xl border bg-white/60 dark:bg-zinc-900/50 p-4 my-4 overflow-x-auto;}
   .prose blockquote {@apply border-l-4 pl-4 italic text-zinc-600 dark:text-zinc-300;}
+  /* list styling (tailwind preflight removes default bullets) */
+  .prose ul {@apply list-disc list-outside pl-6 my-3;}
+  .prose ol {@apply list-decimal list-outside pl-6 my-3;}
+  .prose li {@apply my-1;}
+  .prose li > ul { @apply my-1 pl-6; }
+  .prose li > ol { @apply my-1 pl-6; }
 }
 
 /* Zen mode layout helpers */

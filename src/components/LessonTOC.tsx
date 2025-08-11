@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type TocItem = {
   id: string;
@@ -40,11 +40,13 @@ export function LessonTOC({ markdown }: { markdown?: string }) {
     const mo = article ? new MutationObserver(() => build()) : undefined;
     if (article && mo) mo.observe(article, { childList: true, subtree: true });
     return () => mo?.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markdown]);
 
   useEffect(() => {
     if (items.length === 0) return;
+    const header = document.querySelector<HTMLElement>(".app-topnav");
+    const headerHeight = header?.offsetHeight ?? 0;
+    const topMargin = -(headerHeight + 16); // adjust highlight threshold for sticky header
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -56,7 +58,7 @@ export function LessonTOC({ markdown }: { markdown?: string }) {
           );
         if (visible[0]) setActive((visible[0].target as HTMLElement).id);
       },
-      { rootMargin: "-40% 0px -55% 0px", threshold: [0, 1] }
+      { rootMargin: `${topMargin}px 0px -55% 0px`, threshold: [0, 1] }
     );
     const elements: HTMLElement[] = [];
     for (const it of items) {
@@ -103,7 +105,19 @@ export function LessonTOC({ markdown }: { markdown?: string }) {
                 e.preventDefault();
                 const el = document.getElementById(it.id);
                 if (el) {
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  const header =
+                    document.querySelector<HTMLElement>(".app-topnav");
+                  const headerHeight = header?.offsetHeight ?? 0;
+                  const rect = el.getBoundingClientRect();
+                  const currentY = window.scrollY;
+                  const targetY = currentY + rect.top;
+                  const goingUp = targetY < currentY;
+                  const visibleHeader = getVisibleHeaderHeight(header);
+                  const offset = (goingUp ? headerHeight : visibleHeader) + 12;
+                  window.scrollTo({
+                    top: targetY - offset,
+                    behavior: "smooth",
+                  });
                   setActive(it.id);
                   // Update hash without default jump
                   history.replaceState(null, "", `#${it.id}`);
@@ -121,6 +135,18 @@ export function LessonTOC({ markdown }: { markdown?: string }) {
       </ul>
     </aside>
   );
+}
+
+function getVisibleHeaderHeight(header?: HTMLElement | null): number {
+  if (!header) return 0;
+  const r = header.getBoundingClientRect();
+  const viewportTop = 0;
+  const viewportBottom = window.innerHeight;
+  const visible = Math.max(
+    0,
+    Math.min(r.bottom, viewportBottom) - Math.max(r.top, viewportTop)
+  );
+  return Math.min(visible, r.height);
 }
 
 function slugify(s: string): string {

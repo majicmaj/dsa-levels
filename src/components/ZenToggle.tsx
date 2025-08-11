@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { setZen as setZenGlobal } from "@/lib/zen";
 
 export function ZenToggle() {
   const [zen, setZen] = useState<boolean>(() =>
@@ -27,7 +28,7 @@ export function ZenToggle() {
 
   return (
     <button
-      onClick={() => setZen(false)}
+      onClick={() => setZenGlobal(false)}
       title="Exit zen mode"
       className="fixed bottom-4 right-4 z-[9999] rounded-lg border bg-background/80 px-3 py-1.5 text-sm backdrop-blur hover:bg-zinc-50 dark:hover:bg-zinc-900"
     >
@@ -56,7 +57,7 @@ export function ZenEnterButton() {
   if (zen) return null;
   return (
     <button
-      onClick={() => setZen(true)}
+      onClick={() => setZenGlobal(true)}
       title="Enter zen mode"
       className="hidden rounded-lg border px-3 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 lg:inline-flex"
     >
