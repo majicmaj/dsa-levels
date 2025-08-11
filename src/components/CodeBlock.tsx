@@ -73,7 +73,6 @@ export function CodeBlock({ code, lang }: Props) {
     max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
     max-sm:[&_pre]:max-w-full"
     >
-      {" "}
       <button
         type="button"
         aria-label={copied ? "Copied" : "Copy code"}
