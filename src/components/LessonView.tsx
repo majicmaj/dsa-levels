@@ -9,7 +9,7 @@ export default function LessonView({
   markdown?: string;
 }) {
   return (
-    <article className="mx-auto sm:px-6 py-8 lg:px-10">
+    <article className="sm:px-6 py-8 lg:px-10 ">
       <header className="mb-6">
         <h1 className="font-display text-3xl">{lesson.meta.title}</h1>
         <p className="text-sm opacity-70">

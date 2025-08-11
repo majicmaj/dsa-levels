@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { openSearchPalette } from "@/lib/searchPalette";
 import { Logo } from "@/components/Logo";
 import { isZen, setZen } from "@/lib/zen";
+import { Search } from "lucide-react";
 
 type Props = {
   defaultHref: string;
@@ -93,7 +94,7 @@ export function TopNav({
           </nav>
           <button
             onClick={() => setZen(!zenState)}
-            className="hidden rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
             aria-label="Toggle zen"
             title="Toggle zen mode"
           >
@@ -102,10 +103,13 @@ export function TopNav({
 
           <button
             onClick={() => openSearchPalette()}
-            className="hidden rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
+            className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 sm:inline-flex"
             aria-label="Open search"
           >
-            Search (⌘K)
+            <span className="hidden sm:inline">Search (⌘K)</span>
+            <span className="sm:hidden">
+              <Search className="size-5" />
+            </span>
           </button>
 
           <button

@@ -62,7 +62,7 @@ export default function App() {
       <main className="max-w-8xl px-4 py-8 flex-1">
         <div className="layout-grid grid gap-8 lg:grid-cols-[260px_1fr_260px]">
           <Sidebar />
-          <div className="w-full">{outlet}</div>
+          <div className="grid overflow-x-auto">{outlet}</div>
           <div className="app-rightbar">
             {/* Mount a global TOC that reacts to lesson pages; when not on lesson, it will render nothing */}
             <LessonTOC markdown={getCurrentLessonBody() || ""} />
