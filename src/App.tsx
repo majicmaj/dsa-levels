@@ -60,7 +60,7 @@ export default function App() {
 
       {/* Main with sidebar on large screens */}
       <main className="max-w-8xl px-4 py-4 flex-1">
-        <div className="border layout-grid grid gap-8 lg:grid-cols-[260px_1fr_260px]">
+        <div className="layout-grid grid gap-8 lg:grid-cols-[260px_1fr_260px]">
           <Sidebar />
           <div className="grid overflow-x-auto">{outlet}</div>
           <div className="app-rightbar">
