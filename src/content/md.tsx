@@ -16,7 +16,6 @@ export function MD({ markdown, allowHtml = false }: Props) {
     max-md:[&_pre]:wrap-anywhere max-md:[&_code]:wrap-anywhere
     max-md:[&_pre]:max-w-full"
     >
-      {" "}
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[
