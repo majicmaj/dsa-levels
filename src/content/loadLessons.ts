@@ -12,6 +12,8 @@ export type LessonCheck =
   | { type: "quiz"; id?: string }
   | { type: "unit"; entry: string; tests: string };
 
+export type LessonCrosslink = { to: string; why: string };
+
 export type LessonMeta = {
   id: string;
   title: string;
@@ -23,6 +25,13 @@ export type LessonMeta = {
   est_minutes?: number;
   checks?: LessonCheck[];
   outcomes?: string[];
+  concepts_introduced?: string[];
+  concepts_reused?: string[];
+  canonical_for?: string[];
+  crosslinks?: LessonCrosslink[];
+  status?: "draft" | "review" | "ready";
+  owner?: string;
+  last_reviewed?: string;
 };
 
 export type Lesson = {
@@ -53,6 +62,21 @@ export function loadLessons(): Lesson[] {
       est_minutes: data.est_minutes ?? undefined,
       checks: data.checks ?? [],
       outcomes: Array.isArray(data.outcomes) ? data.outcomes : undefined,
+      concepts_introduced: Array.isArray(data.concepts_introduced)
+        ? data.concepts_introduced
+        : undefined,
+      concepts_reused: Array.isArray(data.concepts_reused)
+        ? data.concepts_reused
+        : undefined,
+      canonical_for: Array.isArray(data.canonical_for)
+        ? data.canonical_for
+        : undefined,
+      crosslinks: Array.isArray(data.crosslinks)
+        ? (data.crosslinks as LessonCrosslink[])
+        : undefined,
+      status: data.status,
+      owner: data.owner,
+      last_reviewed: data.last_reviewed,
     };
 
     return { meta, body: content, path };

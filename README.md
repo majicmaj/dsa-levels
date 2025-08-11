@@ -84,6 +84,7 @@ Some libraries expect Node globals in the browser. The project provides a Buffer
 - `pnpm build` type-check and build for production
 - `pnpm preview` preview the production build
 - `pnpm lint` run ESLint
+- `pnpm validate:curriculum` validate lessons against `curriculum.json`
 
 ## Contributing
 
