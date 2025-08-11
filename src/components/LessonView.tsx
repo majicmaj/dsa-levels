@@ -1,5 +1,7 @@
 import { MD } from "@/content/md";
+import { lessonsIndex } from "@/content/loadLessons";
 import type { Lesson } from "@/content/loadLessons";
+import { Link } from "react-router-dom";
 
 export default function LessonView({
   lesson,
@@ -17,6 +19,31 @@ export default function LessonView({
         </p>
       </header>
       <MD markdown={markdown ?? lesson.body} />
+
+      {lesson.meta.crosslinks && lesson.meta.crosslinks.length > 0 ? (
+        <section className="mt-10">
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-zinc-600">
+            Crosslinks
+          </h2>
+          <ul className="space-y-2">
+            {lesson.meta.crosslinks.map((cl) => {
+              const target = lessonsIndex.find((l) => l.meta.id === cl.to);
+              return (
+                <li key={cl.to} className="text-sm">
+                  <Link to={`/lesson/${cl.to}`} className="underline">
+                    {target?.meta.title ?? cl.to}
+                  </Link>
+                  <span className="ml-2 text-xs text-zinc-500">
+                    {target
+                      ? `(${target.meta.topic} · L${target.meta.level}) — ${cl.why}`
+                      : `— ${cl.why}`}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </article>
   );
 }
