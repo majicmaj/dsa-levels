@@ -173,7 +173,7 @@ export default function LessonPage() {
           ) : null}
 
           {/* pager */}
-          <div className="mt-10 flex items-center justify-between">
+          <div className="mt-10 grid sm:grid-cols-2 gap-1 sm:gap-4">
             {prev ? (
               <Link
                 to={`/lesson/${prev.meta.id}`}
@@ -187,7 +187,7 @@ export default function LessonPage() {
             {next ? (
               <Link
                 to={`/lesson/${next.meta.id}`}
-                className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                className="text-right sm:text-left rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               >
                 {next.meta.title} →
               </Link>
