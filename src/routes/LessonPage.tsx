@@ -98,7 +98,7 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-6xl sm:px-6 py-8">
       {/* breadcrumbs */}
       <nav className="mb-6 text-sm text-zinc-600">
         <Link to="/" className="underline">

@@ -38,7 +38,7 @@ export function CodeBlock({ code, lang }: Props) {
 
   if (!html) {
     return (
-      <div className="relative group">
+      <div className="relative group overflow-x-auto">
         <button
           type="button"
           aria-label="Copy code"
@@ -51,15 +51,29 @@ export function CodeBlock({ code, lang }: Props) {
             <Copy className="h-3.5 w-3.5" />
           )}
         </button>
-        <pre className="shiki">
-          <code>{code}</code>
-        </pre>
+        <div
+          className="relative group
+                  max-sm:[&_pre]:whitespace-pre-wrap max-sm:[&_code]:whitespace-pre-wrap
+                  max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
+                  [&_pre]:max-w-full"
+        >
+          {" "}
+          <pre className="shiki">
+            <code>{code}</code>
+          </pre>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative group">
+    <div
+      className="relative group
+    max-sm:[&_pre]:whitespace-pre-wrap max-sm:[&_code]:whitespace-pre-wrap
+    max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
+    max-sm:[&_pre]:max-w-full"
+    >
+      {" "}
       <button
         type="button"
         aria-label={copied ? "Copied" : "Copy code"}
