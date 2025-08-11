@@ -22,6 +22,7 @@ export type LessonMeta = {
   tags?: string[];
   est_minutes?: number;
   checks?: LessonCheck[];
+  outcomes?: string[];
 };
 
 export type Lesson = {
@@ -51,6 +52,7 @@ export function loadLessons(): Lesson[] {
       tags: data.tags ?? [],
       est_minutes: data.est_minutes ?? undefined,
       checks: data.checks ?? [],
+      outcomes: Array.isArray(data.outcomes) ? data.outcomes : undefined,
     };
 
     return { meta, body: content, path };

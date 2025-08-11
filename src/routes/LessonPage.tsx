@@ -7,7 +7,11 @@ import {
 import LessonView from "@/components/LessonView";
 import Quiz from "@/components/Quiz";
 import { extractQuizSection, parseQuizFromSection } from "@/lib/quiz";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+import { InlineMD } from "@/components/InlineMD";
 
 /** tiny local progress store (replace with your real store later) */
 const KEY = "progress.completedIds";
@@ -130,17 +134,54 @@ export default function LessonPage() {
             {t}
           </span>
         ))}
-        <button
-          onClick={toggleComplete}
-          className="ml-auto rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
-        >
-          {completed.has(id) ? "✓ Marked Complete" : "Mark Complete"}
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          {prev ? (
+            <Link to={`/lesson/${prev.meta.id}`} aria-label="Previous lesson">
+              <Button variant="outline" size="icon">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+          ) : null}
+          {next ? (
+            <Link to={`/lesson/${next.meta.id}`} aria-label="Next lesson">
+              <Button variant="outline" size="icon">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          ) : null}
+          <button
+            onClick={toggleComplete}
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90"
+          >
+            {completed.has(id) ? "✓ Marked Complete" : "Mark Complete"}
+          </button>
+        </div>
       </div>
+
+      {/* outcomes */}
+      {lesson.meta.outcomes && lesson.meta.outcomes.length > 0 ? (
+        <Card className="mb-6 border-accent dark:border-accent">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Outcomes</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ul className="space-y-2">
+              {lesson.meta.outcomes.map((item, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-600" />
+                  <span className="text-sm text-zinc-800 dark:text-zinc-200">
+                    <InlineMD text={item} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* unmet prereqs callout */}
       {unmet.length > 0 && (
-        <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 dark:bg-amber-900/20 dark:text-amber-200">
+        <div className="mb-6 rounded-xl border border-destructive bg-destructive/10 p-4 text-destructive-foreground">
           <p className="font-semibold">Prerequisites</p>
           <ul className="mt-2 list-inside list-disc">
             {unmet.map((p) => (
