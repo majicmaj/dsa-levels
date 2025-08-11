@@ -12,6 +12,8 @@ if (typeof window !== "undefined" && !window.Buffer) {
   window.Buffer = Buffer;
 }
 
-if (typeof globalThis !== "undefined" && !(globalThis as any).Buffer) {
-  (globalThis as any).Buffer = Buffer;
+// Assign to globalThis in environments that expect Node globals
+declare const globalThis: typeof window & { Buffer?: typeof Buffer };
+if (typeof globalThis !== "undefined" && !globalThis.Buffer) {
+  (globalThis as unknown as { Buffer?: typeof Buffer }).Buffer = Buffer;
 }

@@ -1,0 +1,21 @@
+{
+  "topics": [
+    { "id": "arrays", "name": "Arrays" },
+    { "id": "strings", "name": "Strings" },
+    { "id": "objects", "name": "Objects" },
+    { "id": "numbers", "name": "Numbers" },
+    { "id": "set", "name": "Set" },
+    { "id": "map", "name": "Map" }
+  ],
+  "concepts": [
+    {"id": "strings.unicode.codepoints", "topic": "strings", "title": "Code points vs UTF-16 units", "canonical_lesson": "strings-l1-length-indexing-immutability"},
+    {"id": "strings.unicode.graphemes", "topic": "strings", "title": "Grapheme clusters", "canonical_lesson": "strings-l2-grapheme-clusters-and-emoji"},
+    {"id": "strings.normalize.nfc", "topic": "strings", "title": "Normalization NFC/NFD", "canonical_lesson": "strings-l2-unicode-normalization-nfc-nfd"},
+    {"id": "arrays.sort.comparator", "topic": "arrays", "title": "Sort comparator & stability", "canonical_lesson": "arrays-l2-sorting-basics-and-comparator"},
+    {"id": "objects.entries.fromEntries", "topic": "objects", "title": "Entries ↔ fromEntries", "canonical_lesson": "objects-l4-entries-pairs-and-fromentries"},
+    {"id": "dict.nullproto", "topic": "objects", "title": "Prototype-free dictionaries", "canonical_lesson": "objects-l3-minimal-dictionary-object-table"},
+    {"id": "map.core.api", "topic": "map", "title": "Map core semantics & API", "canonical_lesson": "map-l1-core-api-and-iteration"},
+    {"id": "set.algebra", "topic": "set", "title": "Set algebra (∪ ∩ − ⊕)", "canonical_lesson": "set-l2-algebra-and-idioms"},
+    {"id": "numbers.parse.safety", "topic": "numbers", "title": "Parsing & coercion safety", "canonical_lesson": "numbers-l2-parse-int-float-number"}
+  ]
+}

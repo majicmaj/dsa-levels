@@ -10,10 +10,14 @@ export function setZen(on: boolean) {
   else root.classList.remove("zen");
   try {
     localStorage.setItem("zen", on ? "1" : "0");
-  } catch {}
+  } catch {
+    // ignore storage errors (private mode, quota, etc.)
+  }
   try {
     window.dispatchEvent(new CustomEvent("zen-changed", { detail: on }));
-  } catch {}
+  } catch {
+    // ignore dispatch errors
+  }
 }
 
 export function toggleZen() {
