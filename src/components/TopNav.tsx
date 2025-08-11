@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { openSearchPalette } from "@/lib/searchPalette";
 import { Logo } from "@/components/Logo";
 import { isZen, setZen } from "@/lib/zen";
-import { Search } from "lucide-react";
+import { Moon, Search, Sun } from "lucide-react";
 
 type Props = {
   defaultHref: string;
@@ -117,7 +117,16 @@ export function TopNav({
             className="rounded-lg border px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? "☀︎ Light" : "☾ Dark"}
+            <span className="hidden sm:inline">
+              {theme === "dark" ? "☀︎ Light" : "☾ Dark"}
+            </span>
+            <span className="sm:hidden size-5">
+              {theme === "dark" ? (
+                <Sun className="size-5" />
+              ) : (
+                <Moon className="size-5" />
+              )}
+            </span>
           </button>
         </div>
       </div>
