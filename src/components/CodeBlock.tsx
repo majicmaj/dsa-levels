@@ -53,11 +53,10 @@ export function CodeBlock({ code, lang }: Props) {
         </button>
         <div
           className="relative group
-                  max-sm:[&_pre]:whitespace-pre-wrap max-sm:[&_code]:whitespace-pre-wrap
-                  max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
+                  max-md:[&_pre]:whitespace-pre-wrap max-md:[&_code]:whitespace-pre-wrap
+                  max-md:[&_pre]:wrap-anywhere max-md:[&_code]:wrap-anywhere
                   [&_pre]:max-w-full"
         >
-          {" "}
           <pre className="shiki">
             <code>{code}</code>
           </pre>
@@ -69,9 +68,9 @@ export function CodeBlock({ code, lang }: Props) {
   return (
     <div
       className="relative group
-    max-sm:[&_pre]:whitespace-pre-wrap max-sm:[&_code]:whitespace-pre-wrap
-    max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
-    max-sm:[&_pre]:max-w-full"
+    max-md:[&_pre]:whitespace-pre-wrap max-md:[&_code]:whitespace-pre-wrap
+    max-md:[&_pre]:wrap-anywhere max-md:[&_code]:wrap-anywhere
+    max-md:[&_pre]:max-w-full"
     >
       <button
         type="button"

@@ -8,9 +8,9 @@ export function InlineMD({ text }: { text: string }) {
       className={`
       [&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:py-0.5 dark:[&_code]:bg-zinc-800
       relative group
-      max-sm:[&_pre]:whitespace-pre-wrap max-sm:[&_code]:whitespace-pre-wrap
-      max-sm:[&_pre]:wrap-anywhere max-sm:[&_code]:wrap-anywhere
-      max-sm:[&_pre]:max-w-full
+      max-md:[&_pre]:whitespace-pre-wrap max-md:[&_code]:whitespace-pre-wrap
+      max-md:[&_pre]:wrap-anywhere max-md:[&_code]:wrap-anywhere
+      max-md:[&_pre]:max-w-full
     `}
     >
       <ReactMarkdown

@@ -94,7 +94,7 @@ export function LessonTOC({ markdown }: { markdown?: string }) {
   if (items.length === 0) return null;
 
   return (
-    <aside className="sticky top-24 hidden max-h-[calc(100svh-7rem)] overflow-y-auto text-sm lg:block">
+    <aside className="sticky top-16 hidden max-h-[calc(100svh-7rem)] overflow-y-auto text-sm lg:block">
       <div className="mb-2 font-semibold text-zinc-600">On this page</div>
       <ul className="space-y-1">
         {items.map((it) => (

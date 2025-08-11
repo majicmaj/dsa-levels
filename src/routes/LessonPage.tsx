@@ -214,13 +214,14 @@ export default function LessonPage() {
           ) : null}
 
           {/* pager */}
-          <div className="mt-10 grid sm:grid-cols-2 gap-1 sm:gap-4">
+          <div className="mt-10 grid md:grid-cols-3 gap-1 sm:gap-4">
             {prev ? (
               <Link
                 to={`/lesson/${prev.meta.id}`}
-                className="rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                className="flex items-center justify-between gap-2 text-right sm:text-left rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               >
-                ← {prev.meta.title}
+                <span>←</span>
+                <span>{prev.meta.title}</span>
               </Link>
             ) : (
               <span />
@@ -228,13 +229,17 @@ export default function LessonPage() {
             {next ? (
               <Link
                 to={`/lesson/${next.meta.id}`}
-                className="text-right sm:text-left rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                className="flex items-center justify-between gap-2 text-right sm:text-left rounded-lg border px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-900"
               >
-                {next.meta.title} →
+                <span>{next.meta.title}</span>
+                <span>→</span>
               </Link>
             ) : (
               <span />
             )}
+            <Button onClick={toggleComplete} className="h-11">
+              {completed.has(id) ? "✓ Marked Complete" : "Mark Complete"}
+            </Button>
           </div>
         </div>
       </div>

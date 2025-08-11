@@ -67,7 +67,7 @@ export function Sidebar() {
 
   return (
     <aside className="app-sidebar hidden lg:block">
-      <div className="sticky top-24 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
+      <div className="sticky top-16 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
         {/* Toggle */}
         <div className="mb-3 flex items-center justify-between">
           <div className="inline-flex rounded-lg border p-1 text-sm">
