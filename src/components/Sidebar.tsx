@@ -129,7 +129,7 @@ export function Sidebar() {
               );
 
               return (
-                <section key={t} className="mb-4">
+                <section key={t} className="mb-2">
                   <div className="flex items-center gap-2">
                     <button
                       className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
