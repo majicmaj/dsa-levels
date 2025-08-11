@@ -85,6 +85,10 @@ Some libraries expect Node globals in the browser. The project provides a Buffer
 - `pnpm preview` preview the production build
 - `pnpm lint` run ESLint
 
+## Contributing
+
+See `contribution.md` for guidelines on adding or improving lessons, quizzes, and documentation.
+
 ## License
 
 MIT
