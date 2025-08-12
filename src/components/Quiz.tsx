@@ -32,7 +32,24 @@ export default function Quiz({ quiz }: Props) {
 
   useEffect(() => {
     localStorage.setItem(keys.answers, JSON.stringify(answers));
-  }, [answers, keys.answers]);
+  }, [answers]);
+
+  useEffect(() => {
+    setAnswers(() => {
+      try {
+        return JSON.parse(localStorage.getItem(keys.answers) || "{}");
+      } catch {
+        return {};
+      }
+    });
+    setSubmitted(() => {
+      return localStorage.getItem(keys.submitted) === "1";
+    });
+    setScore(() => {
+      const raw = localStorage.getItem(keys.score);
+      return raw ? Number(raw) : 0;
+    });
+  }, [keys.answers, setAnswers]);
 
   function toggleAnswer(q: QuizQuestion, optKey: string, checked: boolean) {
     setAnswers((prev) => {
@@ -185,7 +202,6 @@ export default function Quiz({ quiz }: Props) {
             </li>
           ))}
         </ol>
-
         <div className="mt-5 flex items-center gap-3">
           <Button onClick={onSubmit} disabled={submitted}>
             {submitted ? "Submitted" : "Submit"}
