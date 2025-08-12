@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { openSearchPalette } from "@/lib/searchPalette";
 import { Logo } from "@/components/Logo";
 import { isZen, setZen } from "@/lib/zen";
 import { Moon, Search, Sun } from "lucide-react";
+import { lessonsIndex } from "@/content/loadLessons";
 
 type Props = {
   defaultHref: string;
@@ -23,6 +24,26 @@ export function TopNav({
   const [hidden, setHidden] = useState(false);
   const [zenState, setZenState] = useState<boolean>(() => isZen());
   const lastY = useRef(0);
+  const location = useLocation();
+
+  // Derive current topic/level from route (topic|levels) or from current lesson
+  const pathname = location.pathname;
+  let currentTopic: string | undefined;
+  let currentLevel: number | undefined;
+  if (pathname.startsWith("/topic/")) {
+    currentTopic = pathname.replace("/topic/", "");
+  } else if (pathname.startsWith("/levels/")) {
+    const part = pathname.replace("/levels/", "").split("/")[0];
+    const n = Number(part);
+    if (Number.isFinite(n)) currentLevel = n;
+  } else if (pathname.startsWith("/lesson/")) {
+    const id = pathname.replace("/lesson/", "");
+    const lesson = lessonsIndex.find((l) => l.meta.id === id);
+    if (lesson) {
+      currentTopic = lesson.meta.topic;
+      currentLevel = lesson.meta.level;
+    }
+  }
 
   useEffect(() => {
     function onScroll() {
@@ -67,30 +88,42 @@ export function TopNav({
 
         {/* Left group: topic buttons (desktop) */}
         <nav className="hidden items-center gap-1 sm:flex">
-          {topics.map(([t]) => (
-            <Link
-              key={t}
-              to={`/topic/${t}`}
-              className="rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-            >
-              {capitalize(t)}
-            </Link>
-          ))}
+          {topics.map(([t]) => {
+            const active = currentTopic === t;
+            return (
+              <Link
+                key={t}
+                to={`/topic/${t}`}
+                className={
+                  "rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 " +
+                  (active ? "bg-zinc-100 text-primary dark:bg-zinc-900" : "")
+                }
+              >
+                {capitalize(t)}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Right group */}
         <div className="ml-auto flex items-center gap-2">
           <nav className="hidden items-center gap-1 sm:flex">
-            {levels.map(([lvl, count]) => (
-              <Link
-                key={lvl}
-                to={`/levels/${lvl}`}
-                title={`${count} lesson(s)`}
-                className="rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-              >
-                L{lvl}
-              </Link>
-            ))}
+            {levels.map(([lvl, count]) => {
+              const active = currentLevel === lvl;
+              return (
+                <Link
+                  key={lvl}
+                  to={`/levels/${lvl}`}
+                  title={`${count} lesson(s)`}
+                  className={
+                    "rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900 " +
+                    (active ? "bg-zinc-100 text-primary dark:bg-zinc-900" : "")
+                  }
+                >
+                  L{lvl}
+                </Link>
+              );
+            })}
           </nav>
           <button
             onClick={() => setZen(!zenState)}

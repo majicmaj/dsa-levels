@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { lessonsIndex, type Lesson } from "@/content/loadLessons";
-import { compareLessons } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { cn, compareLessons } from "@/lib/utils";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Sidebar() {
@@ -69,8 +69,25 @@ export function Sidebar() {
     <aside className="app-sidebar hidden lg:block">
       <div className="sticky top-16 max-h-[calc(100svh-7rem)] overflow-y-auto pr-1">
         {/* Toggle */}
-        <div className="mb-3 flex items-center justify-between">
-          <div className="inline-flex rounded-lg border p-1 text-sm">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <Button
+            variant="outline"
+            size="icon-sm"
+            onClick={() => {
+              const { allExpanded, expandAll, collapseAll } =
+                computeBulkState();
+              if (allExpanded) collapseAll();
+              else expandAll();
+            }}
+          >
+            <ChevronDown
+              className={
+                "h-4 w-4 transition-transform " +
+                (computeBulkState().allExpanded ? "rotate-0" : "-rotate-90")
+              }
+            />
+          </Button>
+          <div className="w-full grid grid-cols-2 rounded-lg border p-1 text-sm">
             <Button
               variant={mode === "topic" ? "default" : "outline"}
               size="sm"
@@ -88,27 +105,10 @@ export function Sidebar() {
               By Level
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const { allExpanded, expandAll, collapseAll } =
-                computeBulkState();
-              if (allExpanded) collapseAll();
-              else expandAll();
-            }}
-          >
-            <ChevronUp
-              className={
-                "h-4 w-4 transition-transform " +
-                (computeBulkState().allExpanded ? "rotate-0" : "-rotate-180")
-              }
-            />
-          </Button>
         </div>
 
         {mode === "topic" ? (
-          <div>
+          <div className="mt-2 space-y-3">
             {topicsAlpha.map(([t, count]) => {
               const href = `/topic/${t}`;
               const isActiveTopic =
@@ -129,10 +129,11 @@ export function Sidebar() {
               );
 
               return (
-                <section key={t} className="mb-2">
+                <section key={t}>
                   <div className="flex items-center gap-2">
-                    <button
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       aria-label={`Toggle ${t}`}
                       onClick={() =>
                         setExpandedTopTopics((prev) => {
@@ -149,7 +150,7 @@ export function Sidebar() {
                           (isExpanded ? "rotate-0" : "-rotate-90")
                         }
                       />
-                    </button>
+                    </Button>
                     <Link
                       to={href}
                       className={
@@ -171,11 +172,16 @@ export function Sidebar() {
                         const activeInSub = ls.some(
                           (l) => l.meta.id === current?.meta.id
                         );
+                        const href = `/levels/${lvl}`;
+                        const isActiveLevel =
+                          location.pathname.startsWith(href) ||
+                          current?.meta.level === lvl;
                         return (
                           <div key={subKey}>
                             <div className="flex items-center gap-2">
-                              <button
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
                                 onClick={() =>
                                   setExpandedSubs((prev) => {
                                     const copy = new Set(prev);
@@ -192,13 +198,19 @@ export function Sidebar() {
                                     (subOpen ? "rotate-0" : "-rotate-90")
                                   }
                                 />
-                              </button>
-                              <div className="text-xs font-semibold">
+                              </Button>
+                              <Link
+                                to={`/levels/${lvl}`}
+                                className={cn(
+                                  "text-xs font-semibold flex-1 border px-3 py-2 rounded-md",
+                                  isActiveLevel ? "border-primary/50" : ""
+                                )}
+                              >
                                 Level {lvl}
-                              </div>
+                              </Link>
                             </div>
                             {(subOpen || activeInSub) && (
-                              <ul className="mt-1 space-y-1">
+                              <ul className="mt-1 space-y-1 border-l pl-7">
                                 {ls.map((l) => {
                                   const isActive =
                                     current?.meta.id === l.meta.id;
@@ -246,161 +258,144 @@ export function Sidebar() {
             })}
           </div>
         ) : (
-          <div className="mt-2">
-            {/* Level mode */}
-            <ul className="grid grid-cols-5 gap-2">
-              {levelsAsc.map(([lvl, count]) => {
-                const href = `/levels/${lvl}`;
-                const isActiveLevel =
-                  location.pathname.startsWith(href) ||
-                  current?.meta.level === lvl;
-                return (
-                  <li key={lvl}>
-                    <Link
-                      to={href}
-                      title={`${count} lesson(s)`}
-                      className={
-                        "flex items-center justify-center rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
-                        (isActiveLevel ? "border-primary/50" : "")
+          <div className="mt-2 space-y-3">
+            {levelsAsc.map(([lvl]) => {
+              const subKey = `L${lvl}`;
+              const topOpen = expandedTopLevels.has(lvl);
+              const ls = (byLevel.get(lvl) ?? []).slice();
+              // Group by topic inside this level
+              const byTop = new Map<string, Lesson[]>();
+              for (const l of ls) {
+                (
+                  byTop.get(l.meta.topic) ??
+                  byTop.set(l.meta.topic, []).get(l.meta.topic)!
+                ).push(l);
+              }
+              const topics = Array.from(byTop.keys()).sort((a, b) =>
+                a.localeCompare(b)
+              );
+              const activeLessonInLevel = ls.find(
+                (l) => l.meta.id === current?.meta.id
+              );
+              const href = `/levels/${lvl}`;
+              const isActiveLevel =
+                location.pathname.startsWith(href) ||
+                current?.meta.level === lvl;
+              return (
+                <section key={subKey}>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        setExpandedTopLevels((prev) => {
+                          const copy = new Set(prev);
+                          if (copy.has(lvl)) copy.delete(lvl);
+                          else copy.add(lvl);
+                          return copy;
+                        })
                       }
+                      aria-label={`Toggle Level ${lvl}`}
                     >
-                      L{lvl}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="mt-3 space-y-3">
-              {levelsAsc.map(([lvl]) => {
-                const subKey = `L${lvl}`;
-                const topOpen = expandedTopLevels.has(lvl);
-                const ls = (byLevel.get(lvl) ?? []).slice();
-                // Group by topic inside this level
-                const byTop = new Map<string, Lesson[]>();
-                for (const l of ls) {
-                  (
-                    byTop.get(l.meta.topic) ??
-                    byTop.set(l.meta.topic, []).get(l.meta.topic)!
-                  ).push(l);
-                }
-                const topics = Array.from(byTop.keys()).sort((a, b) =>
-                  a.localeCompare(b)
-                );
-                const activeLessonInLevel = ls.find(
-                  (l) => l.meta.id === current?.meta.id
-                );
-                return (
-                  <section key={subKey}>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                        onClick={() =>
-                          setExpandedTopLevels((prev) => {
-                            const copy = new Set(prev);
-                            if (copy.has(lvl)) copy.delete(lvl);
-                            else copy.add(lvl);
-                            return copy;
-                          })
+                      <ChevronDown
+                        className={
+                          "h-4 w-4 transition-transform " +
+                          (topOpen ? "rotate-0" : "-rotate-90")
                         }
-                        aria-label={`Toggle Level ${lvl}`}
-                      >
-                        <ChevronDown
-                          className={
-                            "h-4 w-4 transition-transform " +
-                            (topOpen ? "rotate-0" : "-rotate-90")
-                          }
-                        />
-                      </button>
-                      <div className="rounded-lg border px-3 py-2 text-sm">
-                        Level {lvl}
-                      </div>
-                    </div>
+                      />
+                    </Button>
+                    <Link
+                      to={`/levels/${lvl}`}
+                      className={cn(
+                        "flex-1 text-start rounded-lg border px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-900",
+                        isActiveLevel ? "border-primary/50" : ""
+                      )}
+                    >
+                      Level {lvl}
+                    </Link>
+                  </div>
 
-                    {topOpen ? (
-                      <div className="mt-2 space-y-2 border-l pl-3">
-                        {topics.map((t) => {
-                          const subk = `${lvl}:${t}`;
-                          const subOpen = expandedSubs.has(subk);
-                          const tls = byTop.get(t) ?? [];
-                          const activeInSub = tls.some(
-                            (l) => l.meta.id === current?.meta.id
-                          );
-                          return (
-                            <div key={subk}>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                                  onClick={() =>
-                                    setExpandedSubs((prev) => {
-                                      const copy = new Set(prev);
-                                      if (copy.has(subk)) copy.delete(subk);
-                                      else copy.add(subk);
-                                      return copy;
-                                    })
+                  {topOpen ? (
+                    <div className="mt-2 space-y-2 border-l pl-3">
+                      {topics.map((t) => {
+                        const subk = `${lvl}:${t}`;
+                        const subOpen = expandedSubs.has(subk);
+                        const tls = byTop.get(t) ?? [];
+                        const activeInSub = tls.some(
+                          (l) => l.meta.id === current?.meta.id
+                        );
+                        return (
+                          <div key={subk}>
+                            <div className="flex items-center gap-2">
+                              <button
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                                onClick={() =>
+                                  setExpandedSubs((prev) => {
+                                    const copy = new Set(prev);
+                                    if (copy.has(subk)) copy.delete(subk);
+                                    else copy.add(subk);
+                                    return copy;
+                                  })
+                                }
+                                aria-label={`Toggle ${t}`}
+                              >
+                                <ChevronDown
+                                  className={
+                                    "h-4 w-4 transition-transform " +
+                                    (subOpen ? "rotate-0" : "-rotate-90")
                                   }
-                                  aria-label={`Toggle ${t}`}
-                                >
-                                  <ChevronDown
-                                    className={
-                                      "h-4 w-4 transition-transform " +
-                                      (subOpen ? "rotate-0" : "-rotate-90")
-                                    }
-                                  />
-                                </button>
-                                <div className="text-xs font-semibold">
-                                  {capitalize(t)}
-                                </div>
+                                />
+                              </button>
+                              <div className="text-xs font-semibold">
+                                {capitalize(t)}
                               </div>
-                              {(subOpen || activeInSub) && (
-                                <ul className="mt-1 space-y-1">
-                                  {tls.map((l) => {
-                                    const isActive =
-                                      current?.meta.id === l.meta.id;
-                                    return (
-                                      <li key={l.meta.id}>
-                                        <Link
-                                          to={`/lesson/${l.meta.id}`}
-                                          className={
-                                            "block rounded-md px-2 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
-                                            (isActive
-                                              ? "bg-zinc-50 dark:bg-zinc-900 text-primary"
-                                              : "")
-                                          }
-                                          title={`${capitalize(
-                                            l.meta.topic
-                                          )} · L${l.meta.level}`}
-                                        >
-                                          {l.meta.title}
-                                        </Link>
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      activeLessonInLevel && (
-                        <ul className="mt-2 space-y-1 border-l pl-3">
-                          <li>
-                            <Link
-                              to={`/lesson/${activeLessonInLevel.meta.id}`}
-                              className="block rounded-md px-2 py-1 text-xs bg-zinc-50 dark:bg-zinc-900 text-primary"
-                            >
-                              {capitalize(activeLessonInLevel.meta.topic)} —{" "}
-                              {activeLessonInLevel.meta.title}
-                            </Link>
-                          </li>
-                        </ul>
-                      )
-                    )}
-                  </section>
-                );
-              })}
-            </div>
+                            {(subOpen || activeInSub) && (
+                              <ul className="mt-1 space-y-1">
+                                {tls.map((l) => {
+                                  const isActive =
+                                    current?.meta.id === l.meta.id;
+                                  return (
+                                    <li key={l.meta.id}>
+                                      <Link
+                                        to={`/lesson/${l.meta.id}`}
+                                        className={
+                                          "block rounded-md px-2 py-1 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 " +
+                                          (isActive
+                                            ? "bg-zinc-50 dark:bg-zinc-900 text-primary"
+                                            : "")
+                                        }
+                                        title={`${capitalize(
+                                          l.meta.topic
+                                        )} · L${l.meta.level}`}
+                                      >
+                                        {l.meta.title}
+                                      </Link>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    activeLessonInLevel && (
+                      <ul className="mt-2 space-y-1 border-l pl-3">
+                        <li>
+                          <Link
+                            to={`/lesson/${activeLessonInLevel.meta.id}`}
+                            className="block rounded-md px-2 py-1 text-xs bg-zinc-50 dark:bg-zinc-900 text-primary"
+                          >
+                            {activeLessonInLevel.meta.title}
+                          </Link>
+                        </li>
+                      </ul>
+                    )
+                  )}
+                </section>
+              );
+            })}
           </div>
         )}
       </div>
